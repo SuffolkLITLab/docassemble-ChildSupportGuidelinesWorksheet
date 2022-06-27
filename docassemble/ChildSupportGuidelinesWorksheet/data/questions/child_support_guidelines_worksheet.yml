@@ -1,0 +1,973 @@
+---
+include:
+  - docassemble.AssemblyLine:al_package.yml
+  - docassemble.ALMassachusetts:al_massachusetts.yml
+  - docassemble.MassAccess:massaccess.yml
+---
+metadata:
+  title: |
+    Child Support Guidelines Worksheet
+  short title: |
+    Child Support Guidelines Worksheet
+  authors:
+    - Hayden McGuire
+---
+mandatory: True
+comment: |
+  Global interview metadata
+variable name: interview_metadata["child_support_guidelines_worksheet"]
+data:
+  al_weaver_version: "1.6.3"
+  generated on: "2022-06-27"
+  title: >-
+    Child Support Guidelines Worksheet
+  short title: >-
+    Child Support Guidelines Worksheet
+  description: |-
+    Form that assists a litigant in determining what child support payements will be.
+  original_form: >-
+    https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021
+  allowed courts: []
+  categories: []
+  typical role: "unknown"
+  generate download screen: True
+---
+code: |
+  interview_metadata['main_interview_key'] =  'child_support_guidelines_worksheet'
+---
+code: |
+  # This controls the default country and list of states in address field questions
+  AL_DEFAULT_COUNTRY = "US"
+---
+code: |
+  # This controls the default state in address field questions
+  AL_DEFAULT_STATE = "MA"
+---
+code: |
+  github_repo_name =  'docassemble-ChildSupportGuidelinesWorksheet'
+---
+code: |
+  interview_short_title = "Determining what is owed for child support payments"
+---
+code: |
+  al_form_type = "other" 
+---
+objects:
+  - users: ALPeopleList.using(there_are_any=True)
+  - preparer: ALPeopleList.using(ask_number=True,target_number=1)
+---
+sections:
+  - review_child_support_guidelines_worksheet: Review your answers
+---
+#################### Interview order #####################
+comment: |
+  Controls order and branching logic for questions specific to this form
+id: interview_order_child_support_guidelines_worksheet
+code: |
+  # Set the allowed courts for this interview
+  allowed_courts = interview_metadata["child_support_guidelines_worksheet"]["allowed courts"]
+  nav.set_section('review_child_support_guidelines_worksheet')
+  # Below sets the user_role by asking a question.
+  # You can set user_role directly instead to either 'plaintiff' or 'defendant'
+  #user_ask_role
+  prepared_date
+  preparer[0]
+  case_name
+  docket_number
+  parents[0]
+  parents[1]
+  children_number
+  set_progress(14)
+  parents1_under_18_children_number
+  parents1_weekly_gross_amount
+  parents2_weekly_gross_amount
+  set_progress(28)
+  parents1_other_obligations_amount
+  parents2_other_obligations_amount
+  parents1_child2_amount
+  set_progress(42)
+  parents2_child1_amount
+  parents1_share_support_amount
+  set_progress(57)
+  interview_order_child_support_guidelines_worksheet = True
+---
+###################### Main order ######################
+comment: |
+  This block includes the logic for standalone interviews.
+  Delete mandatory: True to include in another interview
+mandatory: True
+code: |
+  al_intro_screen
+  child_support_guidelines_worksheet_intro
+  interview_order_child_support_guidelines_worksheet
+  #signature_date    
+  # Save anonymized interview statistics (customize the saved data below)
+  store_variables_snapshot(data={'zip': users[0].address.zip})    
+  child_support_guidelines_worksheet_preview_question
+  #basic_questions_signature_flow    
+  child_support_guidelines_worksheet_download
+---
+comment: |
+  This question is used to introduce your interview. Please customize
+id: Child_Support_Guidelines_Worksheet
+continue button field: child_support_guidelines_worksheet_intro
+question: |
+  Child Support Guidelines Worksheet
+subquestion: |
+  Getting Started
+---
+id: When is this worksheet being completed
+question: |
+  When is this worksheet being completed?
+subquestion: |
+  ADD NAME OF PREPAPER HERE
+fields:
+  - "What date is this worksheet being prepared on?": prepared_date
+    datatype: date
+---
+id: What is the case name
+question: |
+  What is the case name?
+subquestion: |
+  Please give the name of the case in a Plaintiff v. Defendant format. ADD DOCKET COLLECTION HERE
+fields:
+  - "What is the name of the case?": case_name
+    maxlength: 29
+---
+id: What are the parents names?
+question: |
+  What are the names of the parents invovled in this order?
+fields:
+  - "What is the name of the first parent?": parents[0]
+    maxlength: 29
+  - "What is the name of the second parent?": parents[1]
+    maxlength: 29
+---
+id: How many children will this order pertain to
+question: |
+  How many children will this order pertain to?
+subquestion: |
+  If it is more than one child questions about parenting time and financial obligations will pop-up.
+fields:
+  - "What is the total number of children that might be eligible for support payements?": children_number
+    datatype: number
+  - "Are financial responsibilities and parenting times split equally?": shared_equal_yes
+    datatype: yesno
+  - "Do the children reside with one parent two-thirds of the time?": two_thirds_yes
+    datatype: yesno
+  - "Does each parent provide a primary residence for at least one child?": split_children_yes
+    datatype: yesno
+---
+id: What are the ages of the children this order pertains to
+question: |
+  What are the ages of the children this order pertains to?
+fields:
+  - "How many of Parents1 children are under 18 years old?": parents1_under_18_children_number
+    datatype: number
+  - "How many of Parents2 children are under 18 years old?": parents2_under_18_number
+    datatype: number
+  - "How many of Parents1 children are over 18 years old?": parents1_over_18_number
+    datatype: number
+  - "How many of Parents2 children are over 18 years old?": parents2_over_18_number
+    datatype: number
+---
+id: What does Parents1 income situation look like
+question: |
+  What does Parents1 income situation look like?
+subquestion: |
+  Weekly gross income and social security benefits collected.
+fields:
+  - "What is Parents1 gross weekly income?": parents1_weekly_gross_amount
+    datatype: currency
+    min: 0
+  - "How much is Parents1 Social Security benefit?": parents1_SS_dependency_amount
+    datatype: currency
+    min: 0
+  - "How much of Parents1 SS benefit is sent directly to them?": parents1_SS_dependency_recievied_amount
+    datatype: currency
+    min: 0
+---
+id: What does Parents2 income situation look like
+question: |
+  What does Parents2 income situation look like?
+subquestion: |
+  Weekly gross income and social security benefits collected.
+fields:
+  - "What is Parents2 gross weekly income?": parents2_weekly_gross_amount
+    datatype: currency
+    min: 0
+  - "How much is Parents2 Social Security benefit?": parents2_SS_dependency_amount
+    datatype: currency
+    min: 0
+  - "How much of Parents2 SS benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
+    datatype: currency
+    min: 0
+---
+id: How much does Parents1 pay for health and other expenses
+question: |
+  How much does Parents1 pay for health and other expenses?
+subquestion: |
+  Other Obligations, Health Insurance, Dental/Vision Insurance
+fields:
+  - "How much does Parents1 pay in support for other obligations:": parents1_other_obligations_amount
+    datatype: currency
+    min: 0
+  - "How much does Parents1 pay for health insurance enrollment?": parents1_health_care_amount
+    datatype: currency
+    min: 0
+  - "How much does Parents1 pay for dental and vision insurance?": parents1_dental_vision_amount
+    datatype: currency
+    min: 0
+---
+id: How much does Parents2 pay for health and other expenses
+question: |
+  How much does Parents2 pay for health and other expenses?
+subquestion: |
+  Other Obligations, Health Insurance, Dental/Vision Insurance
+fields:
+  - "How much does Parents2 pay in support for other obligations:": parents2_other_obligations_amount
+    datatype: currency
+    min: 0
+  - "How much does Parents2 pay for health insurance enrollment?": parents2_health_care_amount
+    datatype: currency
+    min: 0
+  - "How much does Parents2 pay for dental and vision insurance?": parents2_dental_vision_amount
+    datatype: currency
+    min: 0
+---
+id: How much does Parents1 pay for each child
+question: |
+  How much does Parents1 pay for each child?
+subquestion: |
+  Give the allocated amount paid in support for each child.
+fields:
+  - "Parents1 What are the child care costs for Child 2 paid by this order?": parents1_child2_amount
+    datatype: currency
+    min: 0
+  - "Parents1 What are the child care costs for Child 5 paid by this order?": parents1_child5_amount
+    datatype: currency
+    min: 0
+  - "Parents1 What are the child care costs for Child 1 paid by this order?": parents1_child1_amount
+    datatype: currency
+    min: 0
+  - "Parents1 What are the child care costs for Child 3 paid by this order?": parents1_child3_amount
+    datatype: currency
+    min: 0
+  - "Parents1 What are the child care costs for Child 4 paid by this order?": parents1_child4_amount
+    datatype: currency
+    min: 0
+---
+id: How much does Parents2 pay in support for each child
+question: |
+  How much does Parents2 pay in support for each child?
+subquestion: |
+  Give the allocated amount paid in support for each child.
+fields:
+  - "Parents2 What are the child care costs for Child 1 paid by this order?": parents2_child1_amount
+    datatype: currency
+    min: 0
+  - "Parents2 What are the child care costs for Child 2 paid by this order?": parents2_child2_amount
+    datatype: currency
+    min: 0
+  - "Parents2 What are the child care costs for Child 3 paid by this order?": parents2_child3_amount
+    datatype: currency
+    min: 0
+  - "Parents2 What are the child care costs for Child 4 paid by this order?": parents2_child4_amount
+    datatype: currency
+    min: 0
+  - "Parents2 What are the child care costs for Child 5 paid by this order?": parents2_child5_amount
+    datatype: currency
+    min: 0
+---
+id: preview child_support_guidelines_worksheet
+question: |
+  Preview your form before you sign it
+subquestion: |
+  Here is a preview of the form you will sign on the next page.   
+  
+  ${ al_recipient_bundle.as_pdf(key='preview') }
+
+  Click the image to open it in a new tab. Click the "Edit answers" button
+  to edit your answers.
+
+  ${ action_button_html(url_action('review_child_support_guidelines_worksheet'), label='Edit answers', color='info') }
+  
+  Remember to come back to this window to continue and sign your form.
+continue button field: child_support_guidelines_worksheet_preview_question    
+---
+code: |
+  signature_fields = []
+---
+code: |
+  parents1_share_support_amount = DAEmpty()
+---
+code: |
+  parents1_total_children_number = DAEmpty()
+---
+code: |
+  parents2_total_children_number = DAEmpty()
+---
+code: |
+  parents1_all_children_amount = DAEmpty()
+---
+code: |
+  parents2_all_children_amount = DAEmpty()
+---
+code: |
+  child2_total_amount = DAEmpty()
+---
+code: |
+  child3_total_amount = DAEmpty()
+---
+code: |
+  child4_total_amount = DAEmpty()
+---
+code: |
+  child5_total_amount = DAEmpty()
+---
+code: |
+  child1_total_amount = DAEmpty()
+---
+code: |
+  parents2_income_available_amount = DAEmpty()
+---
+code: |
+  parents1_income_available_amount = DAEmpty()
+---
+code: |
+  total_available_income_amount = DAEmpty()
+---
+code: |
+  parents2_income_share_percent = DAEmpty()
+---
+code: |
+  parents1_income_share_percent = DAEmpty()
+---
+code: |
+  applicable_income_amount = DAEmpty()
+---
+code: |
+  one_child_support_amount = DAEmpty()
+---
+code: |
+  parents2_adjustments = DAEmpty()
+---
+code: |
+  parents1_adjustments = DAEmpty()
+---
+code: |
+  parents2_support_amount = DAEmpty()
+---
+code: |
+  parents1_support_amount = DAEmpty()
+---
+code: |
+  parents1_children_adjustments = DAEmpty()
+---
+code: |
+  parents2_children_adjustments = DAEmpty()
+---
+code: |
+  parents1_over_18_adjustments_amount = DAEmpty()
+---
+code: |
+  parents2_over_18_adjustments_amount = DAEmpty()
+---
+code: |
+  parents1_adjusted_support_amount = DAEmpty()
+---
+code: |
+  parents2_adjusted_support_amount = DAEmpty()
+---
+code: |
+  parents2_share_support_amount = DAEmpty()
+---
+code: |
+  parents2_low_income_adjustment_amount = DAEmpty()
+---
+code: |
+  parents1_low_income_adjustment_amount = DAEmpty()
+---
+code: |
+  parents2_benchmark_amount = DAEmpty()
+---
+code: |
+  parents1_benchmark_amount = DAEmpty()
+---
+code: |
+  parents2_benchmark_share_amount = DAEmpty()
+---
+code: |
+  parents1_benchmark_share_amount = DAEmpty()
+---
+code: |
+  parents2_adjusted_support_share_amount = DAEmpty()
+---
+code: |
+  parents1_adjusted_support_share_amount = DAEmpty()
+---
+code: |
+  parents1_income_support_precent = DAEmpty()
+---
+code: |
+  parents2_income_support_precent = DAEmpty()
+---
+code: |
+  parents1_adjusted_or_greater_amount = DAEmpty()
+---
+code: |
+  parents2_adjusted_or_greater_amount = DAEmpty()
+---
+code: |
+  recipient_payor = DAEmpty()
+---
+code: |
+  payors_adjusted_share_amount = DAEmpty()
+---
+code: |
+  mass_gov_yes = DAEmpty()
+---
+code: |
+  recipients_support_income_percent = DAEmpty()
+---
+code: |
+  payors_disparity_adjusted_amount = DAEmpty()
+---
+code: |
+  payors_SS_credit_amount = DAEmpty()
+---
+code: |
+  payors_obligations_amount = DAEmpty()
+---
+code: |
+  obligations_hardship_yes = DAEmpty()
+---
+code: |
+  payors_support_income_percent_amount = DAEmpty()
+---
+code: |
+  combined_additional_income_amount = DAEmpty()
+---
+code: |
+  parents1_additional_income_amount = DAEmpty()
+---
+code: |
+  parents2_additional_income_amount = DAEmpty()
+---
+id: child support guidelines worksheet review screen
+event: review_child_support_guidelines_worksheet
+question: |
+  Review your answers
+review:
+  - Edit: case_name
+    button: |
+      **What is the name of the case?**:
+      ${ case_name }
+  - Edit: prepared_date
+    button: |
+      **What date is this worksheet being prepared on?**:
+      ${ prepared_date }
+  - Edit: children_number
+    button: |
+      **What is the total number of children that might be eligible for support payements?**:
+      ${ children_number }
+  - Edit: shared_equal_yes
+    button: |
+      **Are financial responsibilities and parenting times split equally?**:
+      ${ word(yesno(shared_equal_yes)) }
+  - Edit: two_thirds_yes
+    button: |
+      **Do the children reside with one parent two-thirds of the time?**:
+      ${ word(yesno(two_thirds_yes)) }
+  - Edit: split_children_yes
+    button: |
+      **Does each parent provide a primary residence for at least one child?**:
+      ${ word(yesno(split_children_yes)) }
+  - Edit: parents1_under_18_children_number
+    button: |
+      **How many of Parents1 children are under 18 years old?**:
+      ${ parents1_under_18_children_number }
+  - Edit: parents2_under_18_number
+    button: |
+      **How many of Parents2 children are under 18 years old?**:
+      ${ parents2_under_18_number }
+  - Edit: parents1_over_18_number
+    button: |
+      **How many of Parents1 children are over 18 years old?**:
+      ${ parents1_over_18_number }
+  - Edit: parents2_over_18_number
+    button: |
+      **How many of Parents2 children are over 18 years old?**:
+      ${ parents2_over_18_number }
+  - Edit: parents1_total_children_number
+    button: |
+      **Total number of children for Parents1:**:
+      ${ parents1_total_children_number }
+  - Edit: parents2_total_children_number
+    button: |
+      **Total number of children for Parents2:**:
+      ${ parents2_total_children_number }
+  - Edit: parents1_weekly_gross_amount
+    button: |
+      **What is Parents1 gross weekly income?**:
+      ${ currency(parents1_weekly_gross_amount) }
+  - Edit: parents2_weekly_gross_amount
+    button: |
+      **What is Parents2 gross weekly income?**:
+      ${ currency(parents2_weekly_gross_amount) }
+  - Edit: parents1_SS_dependency_amount
+    button: |
+      **How much is Parents1 Social Security benefit?**:
+      ${ currency(parents1_SS_dependency_amount) }
+  - Edit: parents2_SS_dependency_amount
+    button: |
+      **How much is Parents2 Social Security benefit?**:
+      ${ currency(parents2_SS_dependency_amount) }
+  - Edit: parents2_SS_dependency_recievied_amount
+    button: |
+      **How much of Parents2 SS benefit is sent directly to them?**:
+      ${ currency(parents2_SS_dependency_recievied_amount) }
+  - Edit: parents1_SS_dependency_recievied_amount
+    button: |
+      **How much of Parents1 SS benefit is sent directly to them?**:
+      ${ currency(parents1_SS_dependency_recievied_amount) }
+  - Edit: parents1_other_obligations_amount
+    button: |
+      **How much does Parents1 pay in support for other obligations:**:
+      ${ currency(parents1_other_obligations_amount) }
+  - Edit: parents2_other_obligations_amount
+    button: |
+      **How much does Parents2 pay in support for other obligations:**:
+      ${ currency(parents2_other_obligations_amount) }
+  - Edit: parents1_health_care_amount
+    button: |
+      **How much does Parents1 pay for health insurance enrollment?**:
+      ${ currency(parents1_health_care_amount) }
+  - Edit: parents2_health_care_amount
+    button: |
+      **How much does Parents2 pay for health insurance enrollment?**:
+      ${ currency(parents2_health_care_amount) }
+  - Edit: parents1_dental_vision_amount
+    button: |
+      **How much does Parents1 pay for dental and vision insurance?**:
+      ${ currency(parents1_dental_vision_amount) }
+  - Edit: parents2_dental_vision_amount
+    button: |
+      **How much does Parents2 pay for dental and vision insurance?**:
+      ${ currency(parents2_dental_vision_amount) }
+  - Edit: parents1_child2_amount
+    button: |
+      **Parents1 What are the child care costs for Child 2 paid by this order?**:
+      ${ currency(parents1_child2_amount) }
+  - Edit: parents1_child5_amount
+    button: |
+      **Parents1 What are the child care costs for Child 5 paid by this order?**:
+      ${ currency(parents1_child5_amount) }
+  - Edit: parents1_child1_amount
+    button: |
+      **Parents1 What are the child care costs for Child 1 paid by this order?**:
+      ${ currency(parents1_child1_amount) }
+  - Edit: parents1_child3_amount
+    button: |
+      **Parents1 What are the child care costs for Child 3 paid by this order?**:
+      ${ currency(parents1_child3_amount) }
+  - Edit: parents1_child4_amount
+    button: |
+      **Parents1 What are the child care costs for Child 4 paid by this order?**:
+      ${ currency(parents1_child4_amount) }
+  - Edit: parents1_all_children_amount
+    button: |
+      **What are the child care costs of all children for Parents1?**:
+      ${ parents1_all_children_amount }
+  - Edit: parents2_all_children_amount
+    button: |
+      **What are the child care costs of all children for Parents2?**:
+      ${ parents2_all_children_amount }
+  - Edit: parents2_child1_amount
+    button: |
+      **Parents2 What are the child care costs for Child 1 paid by this order?**:
+      ${ currency(parents2_child1_amount) }
+  - Edit: parents2_child2_amount
+    button: |
+      **Parents2 What are the child care costs for Child 2 paid by this order?**:
+      ${ currency(parents2_child2_amount) }
+  - Edit: parents2_child3_amount
+    button: |
+      **Parents2 What are the child care costs for Child 3 paid by this order?**:
+      ${ currency(parents2_child3_amount) }
+  - Edit: parents2_child4_amount
+    button: |
+      **Parents2 What are the child care costs for Child 4 paid by this order?**:
+      ${ currency(parents2_child4_amount) }
+  - Edit: parents2_child5_amount
+    button: |
+      **Parents2 What are the child care costs for Child 5 paid by this order?**:
+      ${ currency(parents2_child5_amount) }
+  - Edit: child2_total_amount
+    button: |
+      **Child2 total amount**:
+      ${ child2_total_amount }
+  - Edit: child3_total_amount
+    button: |
+      **Child3 total amount**:
+      ${ child3_total_amount }
+  - Edit: child4_total_amount
+    button: |
+      **Child4 total amount**:
+      ${ child4_total_amount }
+  - Edit: child5_total_amount
+    button: |
+      **Child5 total amount**:
+      ${ child5_total_amount }
+  - Edit: child1_total_amount
+    button: |
+      **Child1 total amount**:
+      ${ child1_total_amount }
+  - Edit: parents2_income_available_amount
+    button: |
+      **Parents2 income available amount**:
+      ${ parents2_income_available_amount }
+  - Edit: parents1_income_available_amount
+    button: |
+      **Parents1 income available amount**:
+      ${ parents1_income_available_amount }
+  - Edit: total_available_income_amount
+    button: |
+      **Total available income amount (both parents)**:
+      ${ total_available_income_amount }
+  - Edit: parents2_income_share_percent
+    button: |
+      **Parents2 income share percent**:
+      ${ parents2_income_share_percent }
+  - Edit: parents1_income_share_percent
+    button: |
+      **Parents1 income share percent**:
+      ${ parents1_income_share_percent }
+  - Edit: applicable_income_amount
+    button: |
+      **Applicable income amount**:
+      ${ applicable_income_amount }
+  - Edit: one_child_support_amount
+    button: |
+      **One child support amount**:
+      ${ one_child_support_amount }
+  - Edit: parents2_adjustments
+    button: |
+      **Parents2 adjustments**:
+      ${ parents2_adjustments }
+  - Edit: parents1_adjustments
+    button: |
+      **Parents1 adjustments**:
+      ${ parents1_adjustments }
+  - Edit: parents2_support_amount
+    button: |
+      **Parents2 support amount**:
+      ${ parents2_support_amount }
+  - Edit: parents1_support_amount
+    button: |
+      **Parents1 support amount**:
+      ${ parents1_support_amount }
+  - Edit: parents1_children_adjustments
+    button: |
+      **Parents1 children adjustments**:
+      ${ parents1_children_adjustments }
+  - Edit: parents2_children_adjustments
+    button: |
+      **Parents2 children adjustments**:
+      ${ parents2_children_adjustments }
+  - Edit: parents1_over_18_adjustments_amount
+    button: |
+      **Parents1 over 18 adjustments amount**:
+      ${ parents1_over_18_adjustments_amount }
+  - Edit: parents2_over_18_adjustments_amount
+    button: |
+      **Parents2 over 18 adjustments amount**:
+      ${ parents2_over_18_adjustments_amount }
+  - Edit: parents1_adjusted_support_amount
+    button: |
+      **Parents1 adjusted support amount**:
+      ${ parents1_adjusted_support_amount }
+  - Edit: parents2_adjusted_support_amount
+    button: |
+      **Parents2 adjusted support amount**:
+      ${ parents2_adjusted_support_amount }
+  - Edit: parents1_share_support_amount
+    button: |
+      **Parents1 share support amount**:
+      ${ currency(parents1_share_support_amount) }
+  - Edit: parents2_share_support_amount
+    button: |
+      **Parents2 share support amount**:
+      ${ parents2_share_support_amount }
+  - Edit: parents2_low_income_adjustment_amount
+    button: |
+      **Parents2 low income adjustment amount**:
+      ${ parents2_low_income_adjustment_amount }
+  - Edit: parents1_low_income_adjustment_amount
+    button: |
+      **Parents1 low income adjustment amount**:
+      ${ parents1_low_income_adjustment_amount }
+  - Edit: parents2_benchmark_amount
+    button: |
+      **Parents2 benchmark amount**:
+      ${ parents2_benchmark_amount }
+  - Edit: parents1_benchmark_amount
+    button: |
+      **Parents1 benchmark amount**:
+      ${ parents1_benchmark_amount }
+  - Edit: parents2_benchmark_share_amount
+    button: |
+      **Parents2 benchmark share amount**:
+      ${ parents2_benchmark_share_amount }
+  - Edit: parents1_benchmark_share_amount
+    button: |
+      **Parents1 benchmark share amount**:
+      ${ parents1_benchmark_share_amount }
+  - Edit: parents2_adjusted_support_share_amount
+    button: |
+      **Parents2 adjusted support share amount**:
+      ${ parents2_adjusted_support_share_amount }
+  - Edit: parents1_adjusted_support_share_amount
+    button: |
+      **Parents1 adjusted support share amount**:
+      ${ parents1_adjusted_support_share_amount }
+  - Edit: parents1_income_support_precent
+    button: |
+      **Parents1 income support precent**:
+      ${ parents1_income_support_precent }
+  - Edit: parents2_income_support_precent
+    button: |
+      **Parents2 income support precent**:
+      ${ parents2_income_support_precent }
+  - Edit: parents1_adjusted_or_greater_amount
+    button: |
+      **Parents1 adjusted or greater amount**:
+      ${ parents1_adjusted_or_greater_amount }
+  - Edit: parents2_adjusted_or_greater_amount
+    button: |
+      **Parents2 adjusted or greater amount**:
+      ${ parents2_adjusted_or_greater_amount }
+  - Edit: recipient_payor
+    button: |
+      **Recipient payor**:
+      ${ recipient_payor }
+  - Edit: payors_adjusted_share_amount
+    button: |
+      **Payors adjusted share amount**:
+      ${ payors_adjusted_share_amount }
+  - Edit: mass_gov_yes
+    button: |
+      **Mass gov**:
+      ${ mass_gov_yes }
+  - Edit: recipients_support_income_percent
+    button: |
+      **Recipients support income percent**:
+      ${ recipients_support_income_percent }
+  - Edit: payors_disparity_adjusted_amount
+    button: |
+      **Payors disparity adjusted amount**:
+      ${ payors_disparity_adjusted_amount }
+  - Edit: payors_SS_credit_amount
+    button: |
+      **Payors ss credit amount**:
+      ${ payors_SS_credit_amount }
+  - Edit: payors_obligations_amount
+    button: |
+      **Payors obligations amount**:
+      ${ payors_obligations_amount }
+  - Edit: obligations_hardship_yes
+    button: |
+      **Obligations hardship**:
+      ${ obligations_hardship_yes }
+  - Edit: payors_support_income_percent_amount
+    button: |
+      **Payors support income percent amount**:
+      ${ payors_support_income_percent_amount }
+  - Edit: combined_additional_income_amount
+    button: |
+      **Combined additional income amount**:
+      ${ combined_additional_income_amount }
+  - Edit: parents1_additional_income_amount
+    button: |
+      **Parents1 additional income amount**:
+      ${ parents1_additional_income_amount }
+  - Edit: parents2_additional_income_amount
+    button: |
+      **Parents2 additional income amount**:
+      ${ parents2_additional_income_amount }
+  - Edit: docket_number
+    button: |
+      **docket_number**:
+      ${ docket_number }
+  - Edit: parents.revisit
+    button: |
+      **Parents**
+
+      % for item in parents:
+        * ${ item }
+      % endfor
+  - Edit: preparer[0]
+    button: |
+      **preparer[0]**:
+      ${ preparer[0] }
+---
+continue button field: parents.revisit
+question: |
+  Edit parents
+subquestion: |
+  ${ parents.table }
+
+  ${ parents.add_action() }
+---
+table: parents.table
+rows: parents
+columns:
+  - Name: |
+      row_item.name.full() if defined("row_item.name.first") else ""
+edit:
+  - name.first
+confirm: True
+
+---
+id: download child_support_guidelines_worksheet
+event: child_support_guidelines_worksheet_download
+question: |
+  All done
+subquestion: |
+  Thank you ${users}. Your form is ready to download and deliver.
+  
+  View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
+
+  ${ action_button_html(url_action('review_child_support_guidelines_worksheet'), label='Edit answers', color='info') }
+  
+  
+  ${ al_user_bundle.download_list_html() }
+  
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+
+progress: 100
+---
+objects:
+  - child_support_guidelines_worksheet_post_interview_instructions: ALDocument.using(title="Instructions", filename="child_support_guidelines_worksheet_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
+  - child_support_guidelines_worksheet_attachment: ALDocument.using(title="Child Support Guidelines Worksheet", filename="child_support_guidelines_worksheet.pdf", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
+---
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[child_support_guidelines_worksheet_post_interview_instructions,child_support_guidelines_worksheet_attachment], filename="child_support_guidelines_worksheet.pdf_package.pdf", title="All forms to download for your records", enabled=True)
+  - al_recipient_bundle: ALDocumentBundle.using(elements=[child_support_guidelines_worksheet_attachment], filename="child_support_guidelines_worksheet.pdf_package.pdf", title="All forms to download for your records", enabled=True)
+---
+attachments:
+  - name: child support guidelines worksheet post interview instructions
+    filename: Post-interview-instructions     
+    variable name: child_support_guidelines_worksheet_post_interview_instructions[i]        
+    skip undefined: True
+    docx template file: child_support_guidelines_worksheet_next_steps.docx
+  - name: child support guidelines worksheet attachment
+    filename: child_support_guidelines_worksheet.pdf     
+    variable name: child_support_guidelines_worksheet_attachment[i]        
+    skip undefined: True
+    pdf template file: child_support_guidelines_worksheet.pdf
+    fields:
+      - "docket_number": ${ docket_number }
+      - "docket_number__1": ${ docket_number }
+      - "docket_number__2": ${ docket_number }
+      - "docket_number__3": ${ docket_number }
+      - "parents1_name_full": ${ parents[0] }
+      - "parents1_name__1": ${ parents[0] }
+      - "parents1_name__2": ${ parents[0] }
+      - "parents1_name__3": ${ parents[0] }
+      - "parents2_name_full": ${ parents[1] }
+      - "parents2_name__1": ${ parents[1] }
+      - "parents2_name__2": ${ parents[1] }
+      - "parents2_name__3": ${ parents[1] }
+      - "preparer_name_full": ${ preparer[0] }
+      - "case_name": ${ case_name }
+      - "case_name__1": ${ case_name }
+      - "case_name__2": ${ case_name }
+      - "case_name__3": ${ case_name }
+      - "prepared_date": ${ prepared_date }
+      - "children_number": ${ "{:,.2f}".format(children_number) }
+      - "shared_equal_yes": ${ shared_equal_yes }
+      - "two_thirds_yes": ${ two_thirds_yes }
+      - "split_children_yes": ${ split_children_yes }
+      - "parents1_under_18_children_number": ${ "{:,.2f}".format(parents1_under_18_children_number) }
+      - "parents2_under_18_number": ${ "{:,.2f}".format(parents2_under_18_number) }
+      - "parents1_over_18_number": ${ "{:,.2f}".format(parents1_over_18_number) }
+      - "parents2_over_18_number": ${ "{:,.2f}".format(parents2_over_18_number) }
+      - "parents1_total_children_number": ${ parents1_total_children_number }
+      - "parents2_total_children_number": ${ parents2_total_children_number }
+      - "parents1_weekly_gross_amount": ${ currency(parents1_weekly_gross_amount) }
+      - "parents2_weekly_gross_amount": ${ currency(parents2_weekly_gross_amount) }
+      - "parents1_SS_dependency_amount": ${ currency(parents1_SS_dependency_amount) }
+      - "parents2_SS_dependency_amount": ${ currency(parents2_SS_dependency_amount) }
+      - "parents2_SS_dependency_recievied_amount": ${ currency(parents2_SS_dependency_recievied_amount) }
+      - "parents1_SS_dependency_recievied_amount": ${ currency(parents1_SS_dependency_recievied_amount) }
+      - "parents1_other_obligations_amount": ${ currency(parents1_other_obligations_amount) }
+      - "parents2_other_obligations_amount": ${ currency(parents2_other_obligations_amount) }
+      - "parents1_health_care_amount": ${ currency(parents1_health_care_amount) }
+      - "parents2_health_care_amount": ${ currency(parents2_health_care_amount) }
+      - "parents1_dental_vision_amount": ${ currency(parents1_dental_vision_amount) }
+      - "parents2_dental_vision_amount": ${ currency(parents2_dental_vision_amount) }
+      - "parents1_child2_amount": ${ currency(parents1_child2_amount) }
+      - "parents1_child5_amount": ${ currency(parents1_child5_amount) }
+      - "parents1_child1_amount": ${ currency(parents1_child1_amount) }
+      - "parents1_child3_amount": ${ currency(parents1_child3_amount) }
+      - "parents1_child4_amount": ${ currency(parents1_child4_amount) }
+      - "parents1_all_children_amount": ${ parents1_all_children_amount }
+      - "parents2_all_children_amount": ${ parents2_all_children_amount }
+      - "parents2_child1_amount": ${ currency(parents2_child1_amount) }
+      - "parents2_child2_amount": ${ currency(parents2_child2_amount) }
+      - "parents2_child3_amount": ${ currency(parents2_child3_amount) }
+      - "parents2_child4_amount": ${ currency(parents2_child4_amount) }
+      - "parents2_child5_amount": ${ currency(parents2_child5_amount) }
+      - "child2_total_amount": ${ child2_total_amount }
+      - "child3_total_amount": ${ child3_total_amount }
+      - "child4_total_amount": ${ child4_total_amount }
+      - "child5_total_amount": ${ child5_total_amount }
+      - "child1_total_amount": ${ child1_total_amount }
+      - "parents2_income_available_amount": ${ parents2_income_available_amount }
+      - "parents1_income_available_amount": ${ parents1_income_available_amount }
+      - "total_available_income_amount": ${ total_available_income_amount }
+      - "parents2_income_share_percent": ${ parents2_income_share_percent }
+      - "parents1_income_share_percent": ${ parents1_income_share_percent }
+      - "applicable_income_amount": ${ applicable_income_amount }
+      - "one_child_support_amount": ${ one_child_support_amount }
+      - "parents2_adjustments": ${ parents2_adjustments }
+      - "parents1_adjustments": ${ parents1_adjustments }
+      - "parents2_support_amount": ${ parents2_support_amount }
+      - "parents1_support_amount": ${ parents1_support_amount }
+      - "parents1_children_adjustments": ${ parents1_children_adjustments }
+      - "parents2_children_adjustments": ${ parents2_children_adjustments }
+      - "parents1_over_18_adjustments_amount": ${ parents1_over_18_adjustments_amount }
+      - "parents2_over_18_adjustments_amount": ${ parents2_over_18_adjustments_amount }
+      - "parents1_adjusted_support_amount": ${ parents1_adjusted_support_amount }
+      - "parents2_adjusted_support_amount": ${ parents2_adjusted_support_amount }
+      - "parents1_share_support_amount": ${ currency(parents1_share_support_amount) }
+      - "parents1_share_support_amount__1": ${ currency(parents1_share_support_amount) }
+      - "parents2_share_support_amount": ${ parents2_share_support_amount }
+      - "parents2_share_support_amount__1": ${ parents2_share_support_amount }
+      - "parents2_low_income_adjustment_amount": ${ parents2_low_income_adjustment_amount }
+      - "parents1_low_income_adjustment_amount": ${ parents1_low_income_adjustment_amount }
+      - "parents2_benchmark_amount": ${ parents2_benchmark_amount }
+      - "parents1_benchmark_amount": ${ parents1_benchmark_amount }
+      - "parents2_benchmark_share_amount": ${ parents2_benchmark_share_amount }
+      - "parents1_benchmark_share_amount": ${ parents1_benchmark_share_amount }
+      - "parents2_adjusted_support_share_amount": ${ parents2_adjusted_support_share_amount }
+      - "parents1_adjusted_support_share_amount": ${ parents1_adjusted_support_share_amount }
+      - "parents1_income_support_precent": ${ parents1_income_support_precent }
+      - "parents2_income_support_precent": ${ parents2_income_support_precent }
+      - "parents1_adjusted_or_greater_amount": ${ parents1_adjusted_or_greater_amount }
+      - "parents2_adjusted_or_greater_amount": ${ parents2_adjusted_or_greater_amount }
+      - "recipient_payor": ${ recipient_payor }
+      - "recipient_payor__1": ${ recipient_payor }
+      - "payors_adjusted_share_amount": ${ payors_adjusted_share_amount }
+      - "mass_gov_yes": ${ mass_gov_yes }
+      - "recipients_support_income_percent": ${ recipients_support_income_percent }
+      - "payors_disparity_adjusted_amount": ${ payors_disparity_adjusted_amount }
+      - "payors_SS_credit_amount": ${ payors_SS_credit_amount }
+      - "payors_obligations_amount": ${ payors_obligations_amount }
+      - "obligations_hardship_yes": ${ obligations_hardship_yes }
+      - "payors_support_income_percent_amount": ${ payors_support_income_percent_amount }
+      - "combined_additional_income_amount": ${ combined_additional_income_amount }
+      - "parents1_additional_income_amount": ${ parents1_additional_income_amount }
+      - "parents2_additional_income_amount": ${ parents2_additional_income_amount }
