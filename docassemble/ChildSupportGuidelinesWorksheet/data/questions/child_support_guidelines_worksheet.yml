@@ -53,7 +53,7 @@ code: |
   al_form_type = "other" 
 ---
 objects:
-  - users: ALPeopleList.using(there_are_any=True)
+  - users: ALPeopleList.using(there_are_any=False)
   - preparer: ALPeopleList.using(ask_number=True,target_number=1)
 ---
 sections:
@@ -71,12 +71,9 @@ code: |
   # You can set user_role directly instead to either 'plaintiff' or 'defendant'
   #user_ask_role
   prepared_date
-  preparer[0]
   case_name
-  docket_number
-  parents[0]
-  parents[1]
   children_number
+  parents1_name_full
   set_progress(14)
   parents1_under_18_children_number
   parents1_weekly_gross_amount
@@ -102,7 +99,7 @@ code: |
   interview_order_child_support_guidelines_worksheet
   #signature_date    
   # Save anonymized interview statistics (customize the saved data below)
-  store_variables_snapshot(data={'zip': users[0].address.zip})    
+  #store_variables_snapshot(data={'zip': users[0].address.zip})    
   child_support_guidelines_worksheet_preview_question
   #basic_questions_signature_flow    
   child_support_guidelines_worksheet_download
@@ -114,168 +111,216 @@ continue button field: child_support_guidelines_worksheet_intro
 question: |
   Child Support Guidelines Worksheet
 subquestion: |
-  Getting Started
+  This worksheet will help you determine how much child support will be owed.  
+  
+  To complete the worksheet you will need income and expense information for **both parents**. You may estimate these numbers if you do not have exact figures, but the results you will get will not be compeltly accurate. 
+  
+  If you click [HERE](https://www.mass.gov/doc/2021-child-support-guidelines/download), you will be brought to the official Massachusetts guidlines for this worksheet. This interview uses those guidlines to make it more digestable and approachable to litigants. 
 ---
-id: When is this worksheet being completed
+id: Preparer information
 question: |
-  When is this worksheet being completed?
+  Preparer information
 subquestion: |
-  ADD NAME OF PREPAPER HERE
+  Please give who is filling out this worksheet, and what todays date is.
 fields:
+  - "Who is filling out this worksheet?": preparer_name_full
+    maxlength: 28
   - "What date is this worksheet being prepared on?": prepared_date
     datatype: date
+    default: |
+       ${ today() }
 ---
-id: What is the case name
+id: Case Information
 question: |
-  What is the case name?
-subquestion: |
-  Please give the name of the case in a Plaintiff v. Defendant format. ADD DOCKET COLLECTION HERE
+  What is the case name and docket number? 
 fields:
   - "What is the name of the case?": case_name
     maxlength: 29
+    hint: |
+      Jane Doe v. John Smith
+  - "Please provide the docket number for the case.": docket_number
+    maxlength: 29
+    hint: |
+      e.g. SU15D004CS
+    help: |
+      The docket number should be a 11 digit string of numbers and letters.
 ---
+#Having trouble with js show if command. Want the hashed out Q to show instead of the live one depending on condition. 
 id: What are the parents names?
 question: |
-  What are the names of the parents invovled in this order?
+  What are the names of the parents involved in this order?
+subquestion: |
 fields:
-  - "What is the name of the first parent?": parents[0]
-    maxlength: 29
-  - "What is the name of the second parent?": parents[1]
+  - "What is the name of the first parent?": parents1_name_full
+    maxlength: 29    
+  #- "What is the name of the parent with whom the children primarily live?": parents1_name_full
+  #  maxlength: 29
+  #  js show if: |
+  #    val(two_thirds_yes) == "yes"
+  - "What is the name of the second parent?": parents2_name_full
     maxlength: 29
 ---
-id: How many children will this order pertain to
+#Recomeneded radio boxes for this quesiton. Unsure how to format them to cover three check boxes. 
+id: How many children will this order concern?
 question: |
-  How many children will this order pertain to?
-subquestion: |
-  If it is more than one child questions about parenting time and financial obligations will pop-up.
+  How many children are involved and how are parenting responsibilties split?
 fields:
   - "What is the total number of children that might be eligible for support payements?": children_number
     datatype: number
-  - "Are financial responsibilities and parenting times split equally?": shared_equal_yes
+  - note: |
+      Please click the box that applies to the children to be covered by the order. Only select **one option** from the choices below.
+  - "Are financial responsibilities and parenting times **shared** equally?": shared_equal_yes
     datatype: yesno
-  - "Do the children reside with one parent two-thirds of the time?": two_thirds_yes
+    help: |
+      If the children live with you and the other parent about the same amount of time. And you and the other parent share financial responsibility for the children.
+  - "Do the children reside with one parent **two-thirds** of the time?": two_thirds_yes
     datatype: yesno
-  - "Does each parent provide a primary residence for at least one child?": split_children_yes
+    help: |
+      If the children live with one parent at least two-thirds of the time. This is the box you check if one parent is mainly responsible for the children.
+  - "Are the children **split** and each parent provides a primary residence for at least one child?": split_children_yes
     datatype: yesno
+    help: |
+      If more than one child is covered by the order and they do not all live with the same parent. For example one child lives mostly with one parent and the other children live with the other parent. This is the box you check if you split responsibility so that each parent provides the main home for at least one of your children.
 ---
-id: What are the ages of the children this order pertains to
+# If you pick 2/3 yes then this could be auto filled. All children will go to Parent 1.
+# This seems like an area where we want a lot of show ifs and to just have the questions phrased different depending on the answer to the check box questions. Or have the note split into show ifs for telling the filler what numbers to input. 
+id: What are the ages of the children this order concerns?
 question: |
-  What are the ages of the children this order pertains to?
+  What is the number and the age's of the children for whom each parent may be eligible to receive support?
 fields:
-  - "How many of Parents1 children are under 18 years old?": parents1_under_18_children_number
+  - "How many of ${ parents1_name_full }'s children are under 18 years old?": parents1_under_18_children_number
     datatype: number
-  - "How many of Parents2 children are under 18 years old?": parents2_under_18_number
+    note: |
+      If the children are with ${ parents1_name_full } more than **two-third's** of the time put them all in ${ parents1_name_full }'s box and a 0 for ${ parents2_name_full }.
+      
+      If the parental responsibilty is **split**, meaning some children live with each parent, put the number of children living with each parent in the respective fields. 
+      
+      If the parental responsibilty is fully **shared**, meaning the children share time with each parent in a mostly equal way, put the total same of children in each parents box.
+  - "How many of ${ parents2_name_full }'s children are under 18 years old?": parents2_under_18_number
     datatype: number
-  - "How many of Parents1 children are over 18 years old?": parents1_over_18_number
+  - "Are there children involved that are over 18 years old?": any_children_over_18
+    datatype: yesnoradio
+
+  - "How many of ${ parents1_name_full }'s children are over 18 years old?": parents1_over_18_number
     datatype: number
-  - "How many of Parents2 children are over 18 years old?": parents2_over_18_number
+    show if: any_children_over_18    
+    note: |
+      The judge will look at the following reasons for including these children in the order:
+     
+      * Your child’s living situation, like why your child lives with you, and when and how much time they live with you;
+      * Why your child is mainly dependent on you;
+      * Your child’s academic situation, like their progress in school, or if they are part-time of full-time;
+      * All kinds of resources the parents may have, like a bedroom for the child or the ability to help with school work; and
+      * Each parent’s contribution to post-secondary education costs for the child or other children in the family.
+  - "How many of ${ parents2_name_full }'s children are over 18 years old?": parents2_over_18_number
     datatype: number
+    show if: any_children_over_18
 ---
-id: What does Parents1 income situation look like
+id: What does Parents 1 income situation look like
 question: |
-  What does Parents1 income situation look like?
+  What does ${ parents1_name_full } income situation look like?
 subquestion: |
   Weekly gross income and social security benefits collected.
 fields:
-  - "What is Parents1 gross weekly income?": parents1_weekly_gross_amount
+  - "What is ${ parents1_name_full } gross weekly income?": parents1_weekly_gross_amount
     datatype: currency
     min: 0
-  - "How much is Parents1 Social Security benefit?": parents1_SS_dependency_amount
+  - "How much is ${ parents1_name_full } Social Security benefit?": parents1_SS_dependency_amount
     datatype: currency
     min: 0
-  - "How much of Parents1 SS benefit is sent directly to them?": parents1_SS_dependency_recievied_amount
+  - "How much of ${ parents1_name_full } SS benefit is sent directly to them?": parents1_SS_dependency_recievied_amount
     datatype: currency
     min: 0
 ---
-id: What does Parents2 income situation look like
+id: What does ${ parents2_name_full } income situation look like
 question: |
-  What does Parents2 income situation look like?
+  What does ${ parents2_name_full } income situation look like?
 subquestion: |
   Weekly gross income and social security benefits collected.
 fields:
-  - "What is Parents2 gross weekly income?": parents2_weekly_gross_amount
+  - "What is ${ parents2_name_full } gross weekly income?": parents2_weekly_gross_amount
     datatype: currency
     min: 0
-  - "How much is Parents2 Social Security benefit?": parents2_SS_dependency_amount
+  - "How much is ${ parents2_name_full } Social Security benefit?": parents2_SS_dependency_amount
     datatype: currency
     min: 0
-  - "How much of Parents2 SS benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
-    datatype: currency
-    min: 0
----
-id: How much does Parents1 pay for health and other expenses
-question: |
-  How much does Parents1 pay for health and other expenses?
-subquestion: |
-  Other Obligations, Health Insurance, Dental/Vision Insurance
-fields:
-  - "How much does Parents1 pay in support for other obligations:": parents1_other_obligations_amount
-    datatype: currency
-    min: 0
-  - "How much does Parents1 pay for health insurance enrollment?": parents1_health_care_amount
-    datatype: currency
-    min: 0
-  - "How much does Parents1 pay for dental and vision insurance?": parents1_dental_vision_amount
+  - "How much of ${ parents2_name_full } SS benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
     datatype: currency
     min: 0
 ---
-id: How much does Parents2 pay for health and other expenses
+id: How much does Parents 1 pay for health and other expenses
 question: |
-  How much does Parents2 pay for health and other expenses?
+  How much does ${ parents1_name_full } pay for health and other expenses?
 subquestion: |
   Other Obligations, Health Insurance, Dental/Vision Insurance
 fields:
-  - "How much does Parents2 pay in support for other obligations:": parents2_other_obligations_amount
+  - "How much does ${ parents1_name_full } pay in support for other obligations:": parents1_other_obligations_amount
     datatype: currency
     min: 0
-  - "How much does Parents2 pay for health insurance enrollment?": parents2_health_care_amount
+  - "How much does ${ parents1_name_full } pay for health insurance enrollment?": parents1_health_care_amount
     datatype: currency
     min: 0
-  - "How much does Parents2 pay for dental and vision insurance?": parents2_dental_vision_amount
+  - "How much does ${ parents1_name_full } pay for dental and vision insurance?": parents1_dental_vision_amount
+    datatype: currency
+    min: 0
+---
+id: How much does Parents 2 pay for health and other expenses
+question: |
+  How much does ${ parents2_name_full } pay for health and other expenses?
+subquestion: |
+  Other Obligations, Health Insurance, Dental/Vision Insurance
+fields:
+  - "How much does ${ parents2_name_full } pay in support for other obligations:": parents2_other_obligations_amount
+    datatype: currency
+    min: 0
+  - "How much does ${ parents2_name_full } pay for health insurance enrollment?": parents2_health_care_amount
+    datatype: currency
+    min: 0
+  - "How much does ${ parents2_name_full } pay for dental and vision insurance?": parents2_dental_vision_amount
     datatype: currency
     min: 0
 ---
 id: How much does Parents1 pay for each child
 question: |
-  How much does Parents1 pay for each child?
+  How much does ${ parents1_name_full } pay for each child?
 subquestion: |
   Give the allocated amount paid in support for each child.
 fields:
-  - "Parents1 What are the child care costs for Child 2 paid by this order?": parents1_child2_amount
+  - "What are the child care costs for Child 2 paid by this order?": parents1_child2_amount
     datatype: currency
     min: 0
-  - "Parents1 What are the child care costs for Child 5 paid by this order?": parents1_child5_amount
+  - "What are the child care costs for Child 5 paid by this order?": parents1_child5_amount
     datatype: currency
     min: 0
-  - "Parents1 What are the child care costs for Child 1 paid by this order?": parents1_child1_amount
+  - "What are the child care costs for Child 1 paid by this order?": parents1_child1_amount
     datatype: currency
     min: 0
-  - "Parents1 What are the child care costs for Child 3 paid by this order?": parents1_child3_amount
+  - "What are the child care costs for Child 3 paid by this order?": parents1_child3_amount
     datatype: currency
     min: 0
-  - "Parents1 What are the child care costs for Child 4 paid by this order?": parents1_child4_amount
+  - "What are the child care costs for Child 4 paid by this order?": parents1_child4_amount
     datatype: currency
     min: 0
 ---
 id: How much does Parents2 pay in support for each child
 question: |
-  How much does Parents2 pay in support for each child?
+  How much does ${ parents2_name_full } pay in support for each child?
 subquestion: |
   Give the allocated amount paid in support for each child.
 fields:
-  - "Parents2 What are the child care costs for Child 1 paid by this order?": parents2_child1_amount
+  - "What are the child care costs for Child 1 paid by this order?": parents2_child1_amount
     datatype: currency
     min: 0
-  - "Parents2 What are the child care costs for Child 2 paid by this order?": parents2_child2_amount
+  - "What are the child care costs for Child 2 paid by this order?": parents2_child2_amount
     datatype: currency
     min: 0
-  - "Parents2 What are the child care costs for Child 3 paid by this order?": parents2_child3_amount
+  - "What are the child care costs for Child 3 paid by this order?": parents2_child3_amount
     datatype: currency
     min: 0
-  - "Parents2 What are the child care costs for Child 4 paid by this order?": parents2_child4_amount
+  - "What are the child care costs for Child 4 paid by this order?": parents2_child4_amount
     datatype: currency
     min: 0
-  - "Parents2 What are the child care costs for Child 5 paid by this order?": parents2_child5_amount
+  - "What are the child care costs for Child 5 paid by this order?": parents2_child5_amount
     datatype: currency
     min: 0
 ---
@@ -296,163 +341,7 @@ subquestion: |
 continue button field: child_support_guidelines_worksheet_preview_question    
 ---
 code: |
-  signature_fields = []
----
-code: |
-  parents1_share_support_amount = DAEmpty()
----
-code: |
-  parents1_total_children_number = DAEmpty()
----
-code: |
-  parents2_total_children_number = DAEmpty()
----
-code: |
-  parents1_all_children_amount = DAEmpty()
----
-code: |
-  parents2_all_children_amount = DAEmpty()
----
-code: |
-  child2_total_amount = DAEmpty()
----
-code: |
-  child3_total_amount = DAEmpty()
----
-code: |
-  child4_total_amount = DAEmpty()
----
-code: |
-  child5_total_amount = DAEmpty()
----
-code: |
-  child1_total_amount = DAEmpty()
----
-code: |
-  parents2_income_available_amount = DAEmpty()
----
-code: |
-  parents1_income_available_amount = DAEmpty()
----
-code: |
-  total_available_income_amount = DAEmpty()
----
-code: |
-  parents2_income_share_percent = DAEmpty()
----
-code: |
-  parents1_income_share_percent = DAEmpty()
----
-code: |
-  applicable_income_amount = DAEmpty()
----
-code: |
-  one_child_support_amount = DAEmpty()
----
-code: |
-  parents2_adjustments = DAEmpty()
----
-code: |
-  parents1_adjustments = DAEmpty()
----
-code: |
-  parents2_support_amount = DAEmpty()
----
-code: |
-  parents1_support_amount = DAEmpty()
----
-code: |
-  parents1_children_adjustments = DAEmpty()
----
-code: |
-  parents2_children_adjustments = DAEmpty()
----
-code: |
-  parents1_over_18_adjustments_amount = DAEmpty()
----
-code: |
-  parents2_over_18_adjustments_amount = DAEmpty()
----
-code: |
-  parents1_adjusted_support_amount = DAEmpty()
----
-code: |
-  parents2_adjusted_support_amount = DAEmpty()
----
-code: |
-  parents2_share_support_amount = DAEmpty()
----
-code: |
-  parents2_low_income_adjustment_amount = DAEmpty()
----
-code: |
-  parents1_low_income_adjustment_amount = DAEmpty()
----
-code: |
-  parents2_benchmark_amount = DAEmpty()
----
-code: |
-  parents1_benchmark_amount = DAEmpty()
----
-code: |
-  parents2_benchmark_share_amount = DAEmpty()
----
-code: |
-  parents1_benchmark_share_amount = DAEmpty()
----
-code: |
-  parents2_adjusted_support_share_amount = DAEmpty()
----
-code: |
-  parents1_adjusted_support_share_amount = DAEmpty()
----
-code: |
-  parents1_income_support_precent = DAEmpty()
----
-code: |
-  parents2_income_support_precent = DAEmpty()
----
-code: |
-  parents1_adjusted_or_greater_amount = DAEmpty()
----
-code: |
-  parents2_adjusted_or_greater_amount = DAEmpty()
----
-code: |
-  recipient_payor = DAEmpty()
----
-code: |
-  payors_adjusted_share_amount = DAEmpty()
----
-code: |
   mass_gov_yes = DAEmpty()
----
-code: |
-  recipients_support_income_percent = DAEmpty()
----
-code: |
-  payors_disparity_adjusted_amount = DAEmpty()
----
-code: |
-  payors_SS_credit_amount = DAEmpty()
----
-code: |
-  payors_obligations_amount = DAEmpty()
----
-code: |
-  obligations_hardship_yes = DAEmpty()
----
-code: |
-  payors_support_income_percent_amount = DAEmpty()
----
-code: |
-  combined_additional_income_amount = DAEmpty()
----
-code: |
-  parents1_additional_income_amount = DAEmpty()
----
-code: |
-  parents2_additional_income_amount = DAEmpty()
 ---
 id: child support guidelines worksheet review screen
 event: review_child_support_guidelines_worksheet
@@ -834,7 +723,7 @@ event: child_support_guidelines_worksheet_download
 question: |
   All done
 subquestion: |
-  Thank you ${users}. Your form is ready to download and deliver.
+  Thank you ${ preparer_name_full }. Your form is ready to download and deliver.
   
   View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
 
@@ -848,6 +737,60 @@ subquestion: |
 
 progress: 100
 ---
+code: |
+  signature_fields = []
+  parents1_share_support_amount = DAEmpty()
+  parents1_total_children_number = parents1_over_18_number + parents1_under_18_children_number
+  parents2_total_children_number = parents2_over_18_number + parents2_under_18_number
+  parents1_all_children_amount = parents1_child1_amount + parents1_child2_amount + parents1_child3_amount + parents1_child4_amount + parents1_child5_amount
+  parents2_all_children_amount = parents2_child1_amount + parents2_child2_amount + parents2_child3_amount + parents2_child4_amount + parents2_child5_amount
+  child2_total_amount = parents1_child1_amount + parents2_child2_amount
+  child3_total_amount = parents1_child3_amount + parents2_child3_amount
+  child4_total_amount = parents1_child4_amount + parents2_child4_amount
+  child5_total_amount = parents1_child5_amount + parents2_child5_amount
+  child1_total_amount = parents1_child1_amount + parents2_child1_amount
+  parents2_income_available_amount = parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount
+  parents1_income_available_amount = parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount
+  total_available_income_amount = parents1_income_available_amount + parents2_income_available_amount
+  parents2_income_share_percent = parents2_income_available_amount / total_available_income_amount
+  parents1_income_share_percent = parents1_income_available_amount / total_available_income_amount
+  applicable_income_amount = DAEmpty()
+  one_child_support_amount = DAEmpty()
+  parents2_adjustments = DAEmpty()
+  parents1_adjustments = DAEmpty()
+  parents2_support_amount = DAEmpty()
+  parents1_support_amount = DAEmpty()
+  parents1_children_adjustments = DAEmpty()
+  parents2_children_adjustments = DAEmpty()
+  parents1_over_18_adjustments_amount = DAEmpty()
+  parents2_over_18_adjustments_amount = DAEmpty()
+  parents1_adjusted_support_amount = DAEmpty()
+  parents2_adjusted_support_amount = DAEmpty()
+  parents2_share_support_amount = DAEmpty()
+  parents2_low_income_adjustment_amount = DAEmpty()
+  parents1_low_income_adjustment_amount = DAEmpty()
+  parents2_benchmark_amount = DAEmpty()
+  parents1_benchmark_amount = DAEmpty()
+  parents2_benchmark_share_amount = DAEmpty()
+  parents1_benchmark_share_amount = DAEmpty()
+  parents2_adjusted_support_share_amount = DAEmpty()
+  parents1_adjusted_support_share_amount = DAEmpty()
+  parents1_income_support_precent = DAEmpty()
+  parents2_income_support_precent = DAEmpty()
+  parents1_adjusted_or_greater_amount = DAEmpty()
+  parents2_adjusted_or_greater_amount = DAEmpty()
+  recipient_payor = DAEmpty()
+  payors_adjusted_share_amount = DAEmpty()
+  recipients_support_income_percent = DAEmpty()
+  payors_disparity_adjusted_amount = DAEmpty()
+  payors_SS_credit_amount = DAEmpty()
+  payors_obligations_amount = DAEmpty()
+  obligations_hardship_yes = DAEmpty()
+  payors_support_income_percent_amount = DAEmpty()
+  combined_additional_income_amount = DAEmpty()
+  parents1_additional_income_amount = DAEmpty()
+  parents2_additional_income_amount = DAEmpty()
+---
 objects:
   - child_support_guidelines_worksheet_post_interview_instructions: ALDocument.using(title="Instructions", filename="child_support_guidelines_worksheet_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
   - child_support_guidelines_worksheet_attachment: ALDocument.using(title="Child Support Guidelines Worksheet", filename="child_support_guidelines_worksheet.pdf", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
@@ -856,6 +799,8 @@ objects:
   - al_user_bundle: ALDocumentBundle.using(elements=[child_support_guidelines_worksheet_post_interview_instructions,child_support_guidelines_worksheet_attachment], filename="child_support_guidelines_worksheet.pdf_package.pdf", title="All forms to download for your records", enabled=True)
   - al_recipient_bundle: ALDocumentBundle.using(elements=[child_support_guidelines_worksheet_attachment], filename="child_support_guidelines_worksheet.pdf_package.pdf", title="All forms to download for your records", enabled=True)
 ---
+#There is a Label error with parents2_under_18_number or parents1_over_18_children_number. Pick one convention to use consistantely with ths variable type. 
+# Division to show share of available income, concerned this could have some funky consequences. 
 attachments:
   - name: child support guidelines worksheet post interview instructions
     filename: Post-interview-instructions     
@@ -872,15 +817,15 @@ attachments:
       - "docket_number__1": ${ docket_number }
       - "docket_number__2": ${ docket_number }
       - "docket_number__3": ${ docket_number }
-      - "parents1_name_full": ${ parents[0] }
-      - "parents1_name__1": ${ parents[0] }
-      - "parents1_name__2": ${ parents[0] }
-      - "parents1_name__3": ${ parents[0] }
-      - "parents2_name_full": ${ parents[1] }
-      - "parents2_name__1": ${ parents[1] }
-      - "parents2_name__2": ${ parents[1] }
-      - "parents2_name__3": ${ parents[1] }
-      - "preparer_name_full": ${ preparer[0] }
+      - "parents1_name_full": ${ parents1_name_full }
+      - "parents1_name__1": ${ parents1_name_full }
+      - "parents1_name__2": ${ parents1_name_full }
+      - "parents1_name__3": ${ parents1_name_full }
+      - "parents2_name_full": ${ parents2_name_full }
+      - "parents2_name__1": ${ parents2_name_full }
+      - "parents2_name__2": ${ parents2_name_full }
+      - "parents2_name__3": ${ parents2_name_full }
+      - "preparer_name_full": ${ preparer_name_full }
       - "case_name": ${ case_name }
       - "case_name__1": ${ case_name }
       - "case_name__2": ${ case_name }
@@ -894,8 +839,8 @@ attachments:
       - "parents2_under_18_number": ${ "{:,.2f}".format(parents2_under_18_number) }
       - "parents1_over_18_number": ${ "{:,.2f}".format(parents1_over_18_number) }
       - "parents2_over_18_number": ${ "{:,.2f}".format(parents2_over_18_number) }
-      - "parents1_total_children_number": ${ parents1_total_children_number }
-      - "parents2_total_children_number": ${ parents2_total_children_number }
+      - "parents1_total_children_number": ${ parents1_over_18_number + parents1_under_18_children_number }
+      - "parents2_total_children_number": ${ parents2_over_18_number + parents2_under_18_number }
       - "parents1_weekly_gross_amount": ${ currency(parents1_weekly_gross_amount) }
       - "parents2_weekly_gross_amount": ${ currency(parents2_weekly_gross_amount) }
       - "parents1_SS_dependency_amount": ${ currency(parents1_SS_dependency_amount) }
@@ -913,23 +858,23 @@ attachments:
       - "parents1_child1_amount": ${ currency(parents1_child1_amount) }
       - "parents1_child3_amount": ${ currency(parents1_child3_amount) }
       - "parents1_child4_amount": ${ currency(parents1_child4_amount) }
-      - "parents1_all_children_amount": ${ parents1_all_children_amount }
-      - "parents2_all_children_amount": ${ parents2_all_children_amount }
+      - "parents1_all_children_amount": ${ currency(parents1_child1_amount + parents1_child2_amount + parents1_child3_amount + parents1_child4_amount + parents1_child5_amount) }
+      - "parents2_all_children_amount": ${ currency(parents2_child1_amount + parents2_child2_amount + parents2_child3_amount + parents2_child4_amount + parents2_child5_amount) }
       - "parents2_child1_amount": ${ currency(parents2_child1_amount) }
       - "parents2_child2_amount": ${ currency(parents2_child2_amount) }
       - "parents2_child3_amount": ${ currency(parents2_child3_amount) }
       - "parents2_child4_amount": ${ currency(parents2_child4_amount) }
       - "parents2_child5_amount": ${ currency(parents2_child5_amount) }
-      - "child2_total_amount": ${ child2_total_amount }
-      - "child3_total_amount": ${ child3_total_amount }
-      - "child4_total_amount": ${ child4_total_amount }
-      - "child5_total_amount": ${ child5_total_amount }
-      - "child1_total_amount": ${ child1_total_amount }
-      - "parents2_income_available_amount": ${ parents2_income_available_amount }
-      - "parents1_income_available_amount": ${ parents1_income_available_amount }
-      - "total_available_income_amount": ${ total_available_income_amount }
-      - "parents2_income_share_percent": ${ parents2_income_share_percent }
-      - "parents1_income_share_percent": ${ parents1_income_share_percent }
+      - "child2_total_amount": ${ currency(parents1_child2_amount + parents2_child2_amount) }
+      - "child3_total_amount": ${ currency(parents1_child3_amount + parents2_child3_amount) }
+      - "child4_total_amount": ${ currency(parents1_child4_amount + parents2_child4_amount) }
+      - "child5_total_amount": ${ currency(parents1_child5_amount + parents2_child5_amount) }
+      - "child1_total_amount": ${ currency(parents1_child1_amount + parents2_child1_amount) }
+      - "parents2_income_available_amount": ${ currency(parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount) }
+      - "parents1_income_available_amount": ${ currency(parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount) }
+      - "total_available_income_amount": ${ currency(parents1_income_available_amount + parents2_income_available_amount) }
+      - "parents2_income_share_percent": ${ currency(parents2_income_available_amount / total_available_income_amount) }
+      - "parents1_income_share_percent": ${ currency(parents1_income_available_amount / total_available_income_amount) }
       - "applicable_income_amount": ${ applicable_income_amount }
       - "one_child_support_amount": ${ one_child_support_amount }
       - "parents2_adjustments": ${ parents2_adjustments }
