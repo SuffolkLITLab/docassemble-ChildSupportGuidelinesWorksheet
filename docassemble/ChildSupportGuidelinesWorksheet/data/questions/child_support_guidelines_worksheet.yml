@@ -758,12 +758,12 @@ code: |
   one_child_support_amount = DAEmpty()
   parents2_adjustments = DAEmpty()
   parents1_adjustments = DAEmpty()
-  parents2_support_amount = DAEmpty()
-  parents1_support_amount = DAEmpty()
+  parents2_support_amount = one_child_support_amount * parents2_adjustments
+  parents1_support_amount = one_child_support_amount * parents1_adjustments
   parents1_children_adjustments = DAEmpty()
   parents2_children_adjustments = DAEmpty()
-  parents1_over_18_adjustments_amount = DAEmpty()
-  parents2_over_18_adjustments_amount = DAEmpty()
+  parents1_over_18_adjustments_amount = parents1_support_amount * parents1_children_adjustments
+  parents2_over_18_adjustments_amount = parents2_support_amount * parents2_children_adjustments
   parents1_adjusted_support_amount = DAEmpty()
   parents2_adjusted_support_amount = DAEmpty()
   parents2_share_support_amount = DAEmpty()
@@ -879,16 +879,16 @@ attachments:
       - "one_child_support_amount": ${ one_child_support_amount }
       - "parents2_adjustments": ${ parents2_adjustments }
       - "parents1_adjustments": ${ parents1_adjustments }
-      - "parents2_support_amount": ${ parents2_support_amount }
-      - "parents1_support_amount": ${ parents1_support_amount }
+      - "parents2_support_amount": ${ one_child_support_amount * parents2_adjustments }
+      - "parents1_support_amount": ${ one_child_support_amount * parents1_adjustments }
       - "parents1_children_adjustments": ${ parents1_children_adjustments }
       - "parents2_children_adjustments": ${ parents2_children_adjustments }
-      - "parents1_over_18_adjustments_amount": ${ parents1_over_18_adjustments_amount }
-      - "parents2_over_18_adjustments_amount": ${ parents2_over_18_adjustments_amount }
-      - "parents1_adjusted_support_amount": ${ parents1_adjusted_support_amount }
-      - "parents2_adjusted_support_amount": ${ parents2_adjusted_support_amount }
-      - "parents1_share_support_amount": ${ currency(parents1_share_support_amount) }
-      - "parents1_share_support_amount__1": ${ currency(parents1_share_support_amount) }
+      - "parents1_over_18_adjustments_amount": ${ parents1_support_amount * parents1_children_adjustments }
+      - "parents2_over_18_adjustments_amount": ${ parents2_support_amount * parents2_children_adjustments }
+      - "parents1_adjusted_support_amount": ${ parents1_support_amount - parents1_over_18_adjustments_amount }
+      - "parents2_adjusted_support_amount": ${ parents2_support_amount - parents2_over_18_adjustments_amount }
+      - "parents1_share_support_amount": ${ parents1_share_support_amount }
+      - "parents1_share_support_amount__1": ${ parents1_share_support_amount }
       - "parents2_share_support_amount": ${ parents2_share_support_amount }
       - "parents2_share_support_amount__1": ${ parents2_share_support_amount }
       - "parents2_low_income_adjustment_amount": ${ parents2_low_income_adjustment_amount }
