@@ -202,7 +202,6 @@ fields:
     datatype: number
   - "Are there children involved that are over 18 years old?": any_children_over_18
     datatype: yesnoradio
-
   - "How many of ${ parents1_name_full }'s children are over 18 years old?": parents1_over_18_number
     datatype: number
     show if: any_children_over_18        
@@ -917,7 +916,7 @@ attachments:
       - "parents1_income_share_percent": ${ currency(parents1_income_available_amount / total_available_income_amount) }
       - "applicable_income_amount": |
            % if total_available_income_amount < 7692: 
-           ${ total_available_income_amount }
+           ${ currency(total_available_income_amount) }
            % else:
            $7692
            % endif
