@@ -72,11 +72,10 @@ code: |
   #user_ask_role
   prepared_date
   case_name
-  children_number
-  shared_equal_yes
-  parents1_name_full
+  children_number 
   set_progress(14)
   parents1_under_18_children_number
+  parents1_name_full
   parents1_weekly_gross_amount
   parents2_weekly_gross_amount
   set_progress(28)
@@ -146,49 +145,65 @@ fields:
     help: |
       The docket number should be a 11 digit string of numbers and letters.
 ---
-#Having trouble with js show if command. Want the hashed out Q to show instead of the live one depending on condition. 
+question: |
+  What parenting arangment is closest to yours?
+fields:
+  - "Total number of children?": children_number    
+    datatype: number    
+    help: Input what you think the total number of children that are eligible for support payments under this order.
+  - Choose: parenting_arangment
+    input type: radio
+    choices:
+      - Box 1 Parenting and financial responsibilties are **shared** mostly equally.
+      - Box 2 The children live with one parent about **two-thirds** of the time.
+      - Box 3 The children are **split** between the parents, and each parent has primary custody of atleast one child.
+right: |
+  ## Need Help?
+    
+  Pick the choice from the options that you think is most similar to yours. 
+  
+  **Box 1 ** should be selected if the children live with you and the other parent about the same amount of time, and you and the other parent have mostly equal financial responsibility for the children.
+  
+  **Box 2** should be selected if the children live with one parent at least two-thirds of the time. This is the case when children live with one parent Monday-Friday, or when the children stay with one parent for one week, but the other for two. 
+  
+  **Box 3** should be selected if more than one child is covered by the order and they do not all live with the same parent. For example one child lives mostly with one parent and the other children live with the other parent. If each parent has atleast one child who lives with them the majority of the time, or each parent's house is the home for one or more children, this is the correct box to select.
+---
+code: |
+  if parenting_arangment == 'Box 1 Parenting and financial responsibilties are **shared** mostly equally.':
+    shared_equal_yes = True
+    two_thirds_yes = False
+    split_children_yes = False
+  elif parenting_arangment == 'Box 2 The children live with one parent about **two-thirds** of the time.':
+    shared_equal_yes = False
+    two_thirds_yes = True
+    split_children_yes = False
+  elif parenting_arangment == 'Box 3 The children are **split** between the parents, and each parent has primary custody of atleast one child.':
+    shared_equal_yes = False
+    two_thirds_yes = False
+    split_children_yes = True
+---
 id: What are the parents names?
 question: |
   What are the names of the parents involved in this order?  
 subquestion: |
-  If you checked **Box 2** on the previous question, put the name of the parent with whom the children primarily live in the field asking for the **Parent A**, and the other parent’s name in the question for **Parent B**. 
+  If you checked **Box 2** on the previous question, put the name of the parent with whom the children primarily live in the field asking for the **Parent A**, and the other parent’s name in **Parent B**. 
   
-  If you checked **Box 1** or **3**, it does not matter which column you use for each parent’s name.
+  If you checked **Box 1** or **3**, it does not matter which field the parent's name goes into.
+
+  As a **reminder** you selected **${ parenting_arangment }**
 fields:    
-  - "What is the name of **Parent A**?": parents1_name_full
+  - "**Parent A**?": parents1_name_full
     maxlength: 29  
-  - "What is the name of **Parent B**?": parents2_name_full
+  - "**Parent B**?": parents2_name_full
     maxlength: 29 
 ---
-#Recomeneded radio boxes for this quesiton. Unsure how to format them to cover three check boxes. 
-id: How many children will this order concern and how are parenting responsibilities split?
-question: |
-  How many children are involved in this order?
-fields:
-  - "Total number of children?": children_number
-    datatype: number
-    help: Input what you think the total number of children that are eligible for support payements under this order.
-  - note: Please select the box that most resembles your situation and only select **ONE**.
-  - "**BOX 1** - Are financial responsibilities and parenting times **shared** equally?": shared_equal_yes
-    datatype: yesno
-    help: |
-      If the children live with you and the other parent about the same amount of time. And you and the other parent share financial responsibility for the children.
-  - "**BOX 2** - Do the children reside with one parent **two-thirds** of the time?": two_thirds_yes
-    datatype: yesno
-    help: |
-      If the children live with one parent at least two-thirds of the time. This is the box you check if one parent is mainly responsible for the children.
-  - "**BOX 3** - Are the children **split** and each parent provides a primary residence for at least one child?": split_children_yes
-    datatype: yesno
-    help: |
-      If more than one child is covered by the order and they do not all live with the same parent. For example one child lives mostly with one parent and the other children live with the other parent. This is the box you check if you split responsibility so that each parent provides the main home for at least one of your children.
----
-# If you pick 2/3 yes then this could be auto filled. All children will go to Parent 1.
-# This seems like an area where we want a lot of show ifs and to just have the questions phrased different depending on the answer to the check box questions. Or have the note split into show ifs for telling the filler what numbers to input. 
 id: What are the ages of the children this order concerns?
 question: |
   What is the number and the age's of the children for whom each parent may be eligible to receive support?
 subquestion: |
-  Please use the instruction to the right to decide what numbers to enter. For refrence you selected (HOW DO I REMIND THEM OF THEIR CHOICE WHEN ITS THREE SEPREATE VARIABLES??)
+  Please use the instructions to the right to decide what numbers to enter.
+  
+  As a **reminder** you selected **${ parenting_arangment }**
 fields:
   - "How many of ${ parents1_name_full }'s children are under 18 years old?": parents1_under_18_children_number
     datatype: number
@@ -208,7 +223,7 @@ fields:
   - "How many of ${ parents2_name_full }'s children are over 18 years old?": parents2_over_18_number
     datatype: number
     show if: any_children_over_18
-  - note: |
+    note: |
       The judge will look at the following reasons for including these children in the order:
      
       * Your child’s living situation, like why your child lives with you, and when and how much time they live with you;
@@ -218,9 +233,10 @@ fields:
       * Each parent’s contribution to post-secondary education costs for the child or other children in the family.
 ---
 code: |
-  if any_children_over_18 == 'no':
-    parents1_over_18_number = 'N/A'
-    parents2_over_18_number = 'N/A'
+  if any_children_over_18 == False:
+    parents1_over_18_number = 0
+    parents2_over_18_number = 0
+    
 depends on:
   - any_children_over_18   
 ---
@@ -361,6 +377,32 @@ fields:
     show if: 
       code: |
         children_number >= 5
+---
+code: |
+  if children_number == 1:
+    parents1_child2_amount = 0
+    parents1_child3_amount = 0
+    parents1_child4_amount = 0
+    parents1_child5_amount = 0
+    parents2_child2_amount = 0
+    parents2_child3_amount = 0
+    parents2_child4_amount = 0
+    parents2_child5_amount = 0
+  elif children_number == 2:
+    parents1_child3_amount = 0
+    parents1_child4_amount = 0
+    parents1_child5_amount = 0
+    parents2_child3_amount = 0
+    parents2_child4_amount = 0
+    parents2_child5_amount = 0
+  elif children_number == 3:
+    parents1_child4_amount = 0
+    parents1_child5_amount = 0
+    parents2_child4_amount = 0
+    parents2_child5_amount = 0
+  elif children_number == 4:
+    parents1_child5_amount = 0
+    parents2_child5_amount = 0
 ---
 id: preview child_support_guidelines_worksheet
 question: |
@@ -793,7 +835,7 @@ code: |
   total_available_income_amount = parents1_income_available_amount + parents2_income_available_amount
   parents2_income_share_percent = parents2_income_available_amount / total_available_income_amount
   parents1_income_share_percent = parents1_income_available_amount / total_available_income_amount
-  applicable_income_amount = total_available_income_amount
+  applicable_income_amount = DAEmpty()
   one_child_support_amount = DAEmpty()
   parents2_adjustments = DAEmpty()
   parents1_adjustments = DAEmpty()
@@ -839,7 +881,7 @@ objects:
   - al_recipient_bundle: ALDocumentBundle.using(elements=[child_support_guidelines_worksheet_attachment], filename="child_support_guidelines_worksheet.pdf_package.pdf", title="All forms to download for your records", enabled=True)
 ---
 # There is a Label error with parents2_under_18_number or parents1_over_18_children_number. Pick one convention to use consistantely with ths variable type. 
-# Division to show share of available income, concerned this could have some funky consequences. 
+# share percentage of total income should be displayed as percent, not a number or decimal  
 attachments:
   - name: child support guidelines worksheet post interview instructions
     filename: Post-interview-instructions     
@@ -912,8 +954,8 @@ attachments:
       - "parents2_income_available_amount": ${ currency(parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount) }
       - "parents1_income_available_amount": ${ currency(parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount) }
       - "total_available_income_amount": ${ currency(parents1_income_available_amount + parents2_income_available_amount) }
-      - "parents2_income_share_percent": ${ currency(parents2_income_available_amount / total_available_income_amount) }
-      - "parents1_income_share_percent": ${ currency(parents1_income_available_amount / total_available_income_amount) }
+      - "parents2_income_share_percent": ${ (parents2_income_available_amount / total_available_income_amount) * 100 }
+      - "parents1_income_share_percent": ${ (parents1_income_available_amount / total_available_income_amount) * 100 }
       - "applicable_income_amount": |
            % if total_available_income_amount < 7692: 
            ${ currency(total_available_income_amount) }
