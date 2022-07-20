@@ -69,7 +69,7 @@ code: |
   nav.set_section('review_child_support_guidelines_worksheet')
   # Below sets the user_role by asking a question.
   # You can set user_role directly instead to either 'plaintiff' or 'defendant'
-  #user_ask_role
+  # user_ask_role
   prepared_date
   case_name
   children_number 
@@ -879,9 +879,7 @@ objects:
 objects:
   - al_user_bundle: ALDocumentBundle.using(elements=[child_support_guidelines_worksheet_post_interview_instructions,child_support_guidelines_worksheet_attachment], filename="child_support_guidelines_worksheet.pdf_package.pdf", title="All forms to download for your records", enabled=True)
   - al_recipient_bundle: ALDocumentBundle.using(elements=[child_support_guidelines_worksheet_attachment], filename="child_support_guidelines_worksheet.pdf_package.pdf", title="All forms to download for your records", enabled=True)
----
-# There is a Label error with parents2_under_18_number or parents1_over_18_children_number. Pick one convention to use consistantely with ths variable type. 
-# share percentage of total income should be displayed as percent, not a number or decimal  
+--- 
 attachments:
   - name: child support guidelines worksheet post interview instructions
     filename: Post-interview-instructions     
@@ -954,39 +952,238 @@ attachments:
       - "parents2_income_available_amount": ${ currency(parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount) }
       - "parents1_income_available_amount": ${ currency(parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount) }
       - "total_available_income_amount": ${ currency(parents1_income_available_amount + parents2_income_available_amount) }
-      - "parents2_income_share_percent": ${ (parents2_income_available_amount / total_available_income_amount) * 100 }
-      - "parents1_income_share_percent": ${ (parents1_income_available_amount / total_available_income_amount) * 100 }
+      - "parents2_income_share_percent": ${ round(parents2_income_available_amount / total_available_income_amount) } %
+      - "parents1_income_share_percent": ${ round(parents1_income_available_amount / total_available_income_amount) } %
       - "applicable_income_amount": |
            % if total_available_income_amount < 7692: 
            ${ currency(total_available_income_amount) }
            % else:
            $7692
            % endif
-      - "one_child_support_amount": ${ one_child_support_amount }
-      - "parents2_adjustments": ${ parents2_adjustments }
-      - "parents1_adjustments": ${ parents1_adjustments }
+      - "one_child_support_amount": |
+           % if applicable_income_amount <= 210:
+           ${ one_child_support_amount } = 12
+           % elif applicable_income_amount <= 249:
+           ${ one_child_support_amount } = 12 + ((applicable_income_amount - 210) * .2)
+           % elif applicable_income_amount <= 750:
+           ${ one_child_support_amount } = 12 + (applicable_income_amount * .22)
+           % elif applicable_income_amount <= 1400:
+           ${ one_child_support_amount } = 165 + ((applicable_income_amount - 750) * .21)
+           % elif applicable_income_amount <= 2200:
+           ${ one_child_support_amount } = 302 + ((applicable_income_amount - 1400) * .19)
+           % elif applicable_income_amount <= 3500:
+           ${ one_child_support_amount } = 454 + ((applicable_income_amount - 2200) * .14)
+           % elif applicable_income_amount <= 5000:
+           ${ one_child_support_amount } = 636 + ((applicable_income_amount - 3500) * .11)
+           % elif applicable_income_amount <= 7692:
+           ${ one_child_support_amount } = 801 + ((applicable_income_amount - 5000) * .1)
+           % endif
+      - "parents2_adjustments": |
+           % if children_number == 1:
+           ${ parents2_adjustments } = 1
+           % elif children_number == 2:
+           ${ parents2_adjustments } = 1.4
+           % elif children_number == 3:
+           ${ parents2_adjustments } = 1.68
+           % elif children_number == 4:
+           ${ parents2_adjustments } = 1.85
+           % elif children_number == 5:
+           ${ parents2_adjustments } = 1.94
+           % endif
+      - "parents1_adjustments": |
+           % if children_number == 1:
+           ${ parents1_adjustments } = 1
+           % elif children_number == 2:
+           ${ parents1_adjustments } = 1.4
+           % elif children_number == 3:
+           ${ parents1_adjustments } = 1.68
+           % elif children_number == 4:
+           ${ parents1_adjustments } = 1.85
+           % elif children_number == 5:
+           ${ parents1_adjustments } = 1.94
+           % endif
       - "parents2_support_amount": ${ one_child_support_amount * parents2_adjustments }
       - "parents1_support_amount": ${ one_child_support_amount * parents1_adjustments }
-      - "parents1_children_adjustments": ${ parents1_children_adjustments }
-      - "parents2_children_adjustments": ${ parents2_children_adjustments }
+      - "parents1_children_adjustments": | 
+           % if parents1_under_18_children_number == 0:
+             % if parents1_over_18_number >= 5:
+             ${ parents1_children_adjustments } = .25
+             % endif
+           % elif parents1_under_18_children_number == 1:
+             % if parents1_over_18_number == 1:
+             ${ parents1_children_adjustments } = .07
+             % elif parents1_over_18_number == 2:
+             ${ parents1_children_adjustments } = .11
+             % elif parents1_over_18_number == 3:
+             ${ parents1_children_adjustments } = .13
+             % elif parents1_over_18_number == 4:
+             ${ parents1_children_adjustments } = .14
+             % endif
+           % elif parents1_under_18_children_number == 2:
+             % if parents1_over_18_number == 1:
+             ${ parents1_children_adjustments } = .04
+             % elif parents1_over_18_number == 2:
+             ${ parents1_children_adjustments } = .06
+             % elif parents1_over_18_number == 3:
+             ${ parents1_children_adjustments } = .07
+             % endif
+           % elif parents1_under_18_children_number == 3:
+             % if parents1_over_18_number == 1:
+             ${ parents1_children_adjustments } = .02
+             % elif parents1_over_18_number == 2:
+             ${ parents1_children_adjustments } = .03
+             % endif
+           % elif parents1_under_18_children_number == 4:
+             % if parents1_over_18_number == 1:
+             ${ parents1_children_adjustments } = .01
+             % endif
+           % endif
+      - "parents2_children_adjustments": |
+           % if parents2_under_18_number == 0:
+             % if parents2_over_18_number >= 5:
+             ${ parents2_children_adjustments } = .25
+             % endif
+           % elif parents2_under_18_number == 1:
+             % if parents2_over_18_number == 1:
+             ${ parents2_children_adjustments } = .07
+             % elif parents2_over_18_number == 2:
+             ${ parents2_children_adjustments } = .11
+             % elif parents2_over_18_number == 3:
+             ${ parents2_children_adjustments } = .13
+             % elif parents2_over_18_number == 4:
+             ${ parents2_children_adjustments } = .14
+             % endif
+           % elif parents2_under_18_number == 2:
+             % if parents2_over_18_number == 1:
+             ${ parents2_children_adjustments } = .04
+             % elif parents2_over_18_number == 2:
+             ${ parents2_children_adjustments } = .06
+             % elif parents2_over_18_number == 3:
+             ${ parents2_children_adjustments } = .07
+             % endif
+           % elif parents2_under_18_number == 3:
+             % if parents2_over_18_number == 1:
+             ${ parents2_children_adjustments } = .02
+             % elif parents2_over_18_number == 2:
+             ${ parents2_children_adjustments } = .03
+             % endif
+           % elif parents2_under_18_number == 4:
+             % if parents2_over_18_number == 1:
+             ${ parents2_children_adjustments } = .01
+             % endif
+           % endif
       - "parents1_over_18_adjustments_amount": ${ parents1_support_amount * parents1_children_adjustments }
       - "parents2_over_18_adjustments_amount": ${ parents2_support_amount * parents2_children_adjustments }
       - "parents1_adjusted_support_amount": ${ parents1_support_amount - parents1_over_18_adjustments_amount }
       - "parents2_adjusted_support_amount": ${ parents2_support_amount - parents2_over_18_adjustments_amount }
-      - "parents1_share_support_amount": ${ parents1_share_support_amount }
-      - "parents1_share_support_amount__1": ${ parents1_share_support_amount }
-      - "parents2_share_support_amount": ${ parents2_share_support_amount }
-      - "parents2_share_support_amount__1": ${ parents2_share_support_amount }
-      - "parents2_low_income_adjustment_amount": ${ parents2_low_income_adjustment_amount }
-      - "parents1_low_income_adjustment_amount": ${ parents1_low_income_adjustment_amount }
+      - "parents1_share_support_amount":  ${ round(parents1_income_share_percent * parents1_adjusted_support_amount) } %
+      - "parents1_share_support_amount__1": ${ round(parents1_adjusted_support_amount - parents1_share_support_amount) } %
+      - "parents2_share_support_amount": ${ round(parents2_income_share_percent * parents2_adjusted_support_amount) } %
+      - "parents2_share_support_amount__1": ${ round(parents2_adjusted_support_amount - parents2_share_support_amount) } %
+      - "parents2_low_income_adjustment_amount": |
+          % if two_thirds_yes == True:
+            % if parents2_income_available_amount > 249:
+            ${ parents2_low_income_adjustment_amount } =  $ { parents2_share_support_amount }
+            % elif parents2_income_available_amount <= 249:
+              % if parents2_income_available_amount <= 212:
+              ${ parents2_low_income_adjustment_amount } = 12
+              % elif parents2_income_available_amount == 213:
+              ${ parents2_low_income_adjustment_amount } = 13
+              % elif parents2_income_available_amount <= 218:
+              ${ parents2_low_income_adjustment_amount } = 14
+              % elif parents2_income_available_amount <= 223:
+              ${ parents2_low_income_adjustment_amount } = 15
+              % elif parents2_income_available_amount <= 228:
+              ${ parents2_low_income_adjustment_amount } = 16
+              % elif parents2_income_available_amount <= 233:
+              ${ parents2_low_income_adjustment_amount } = 17
+              % elif parents2_income_available_amount <= 238:
+              ${ parents2_low_income_adjustment_amount } = 18
+              % elif parents2_income_available_amount <= 243:
+              ${ parents2_low_income_adjustment_amount } = 19
+              % elif parents2_income_available_amount <= 249:
+              ${ parents2_low_income_adjustment_amount } = 20
+              % endif            
+            % endif
+          % elif two_thirds_yes == False:
+            % if parents1_income_available_amount > 249:
+            ${ parents2_low_income_adjustment_amount } = ${ parents2_share_support_amount }
+            % elif parents1_share_support_amount <= 249:
+              % if parents1_income_available_amount <= 212:
+              ${ parents2_low_income_adjustment_amount } = 12
+              % elif parents1_income_available_amount == 213:
+              ${ parents2_low_income_adjustment_amount } = 13
+              % elif parents1_income_available_amount <= 218:
+              ${ parents2_low_income_adjustment_amount } = 14
+              % elif parents1_income_available_amount <= 223:
+              ${ parents2_low_income_adjustment_amount } = 15
+              % elif parents1_income_available_amount <= 228:
+              ${ parents2_low_income_adjustment_amount } = 16
+              % elif parents1_income_available_amount <= 233:
+              ${ parents2_low_income_adjustment_amount } = 17
+              % elif parents1_income_available_amount <= 238:
+              ${ parents2_low_income_adjustment_amount } = 18
+              % elif parents1_income_available_amount <= 243:
+              ${ parents2_low_income_adjustment_amount } = 19
+              % elif parents1_income_available_amount <= 249:
+              ${ parents2_low_income_adjustment_amount } = 20
+              % endif
+            % endif
+          % endif
+      - "parents1_low_income_adjustment_amount": |
+          % if two_thirds_yes == True:
+          ${ parents1_low_income_adjustment_amount } =  0     
+          % elif two_thirds_yes == False:
+            % if parents2_share_support_amount > 249:
+            ${ parents1_low_income_adjustment_amount } = ${ parents1_share_support_amount }
+            % elif parents2_share_support_amount <= 249:
+              % if parents2_income_available_amount <= 212:
+              ${ parents1_low_income_adjustment_amount } = 12
+              % elif parents2_income_available_amount == 213:
+              ${ parents1_low_income_adjustment_amount } = 13
+              % elif parents2_income_available_amount <= 218:
+              ${ parents1_low_income_adjustment_amount } = 14
+              % elif parents2_income_available_amount <= 223:
+              ${ parents1_low_income_adjustment_amount } = 15
+              % elif parents2_income_available_amount <= 228:
+              ${ parents1_low_income_adjustment_amount } = 16
+              % elif parents2_income_available_amount <= 233:
+              ${ parents1_low_income_adjustment_amount } = 17
+              % elif parents2_income_available_amount <= 238:
+              ${ parents1_low_income_adjustment_amount } = 18
+              % elif parents2_income_available_amount <= 243:
+              ${ parents1_low_income_adjustment_amount } = 19
+              % elif parents2_income_available_amount <= 249:
+              ${ parents1_low_income_adjustment_amount } = 20
+              % endif
+            % endif
+          % endif
       - "parents2_benchmark_amount": ${ parents2_benchmark_amount }
       - "parents1_benchmark_amount": ${ parents1_benchmark_amount }
-      - "parents2_benchmark_share_amount": ${ parents2_benchmark_share_amount }
-      - "parents1_benchmark_share_amount": ${ parents1_benchmark_share_amount }
-      - "parents2_adjusted_support_share_amount": ${ parents2_adjusted_support_share_amount }
-      - "parents1_adjusted_support_share_amount": ${ parents1_adjusted_support_share_amount }
-      - "parents1_income_support_precent": ${ parents1_income_support_precent }
-      - "parents2_income_support_precent": ${ parents2_income_support_precent }
+      - "parents2_benchmark_share_amount": ${ parents2_income_share_percent * parents1_benchmark_amount }
+      - "parents1_benchmark_share_amount": ${ parents1_income_share_percent * parents2_benchmark_amount }
+      - "parents2_adjusted_support_share_amount": ${ parents2_low_income_adjustment_amount + parents2_benchmark_share_amount }
+      - "parents1_adjusted_support_share_amount": ${ parents1_low_income_adjustment_amount + parents1_benchmark_share_amount }
+      - "parents1_income_support_precent": |
+          % if two_thirds_yes == True:
+          ${ parents1_income_support_precent } = N/A
+          % elif two_thirds_yes == False:
+            % if parents1_income_available_amount == 0:
+            ${ parents1_income_support_precent } = 100%
+            % elif parents1_income_available_amount >= .1:
+            ${ parents1_income_support_precent } = ${ parents1_adjusted_support_share_amount / parents1_income_available_amount } %
+            % endif
+          % endif
+      - "parents2_income_support_precent": |
+          % if two_thirds_yes == True:
+          ${ parents2_income_support_precent } = N/A
+          % elif two_thirds_yes == False:
+            % if parents2_income_available_amount == 0:
+            ${ parents2_income_support_precent } = 100%
+            % elif parents2_income_available_amount >= .1:
+            ${ parents2_income_support_precent } = ${ parents2_adjusted_support_share_amount / parents1_income_available_amount } %
+            % endif
+          % endif
       - "parents1_adjusted_or_greater_amount": ${ parents1_adjusted_or_greater_amount }
       - "parents2_adjusted_or_greater_amount": ${ parents2_adjusted_or_greater_amount }
       - "recipient_payor": ${ recipient_payor }
