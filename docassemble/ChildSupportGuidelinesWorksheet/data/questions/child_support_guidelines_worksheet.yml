@@ -72,7 +72,8 @@ code: |
   # user_ask_role
   prepared_date
   case_name
-  children_number 
+  children_number
+  set_parenting_arangment
   set_progress(14)
   parents1_under_18_children_number
   parents1_name_full
@@ -86,6 +87,13 @@ code: |
   parents2_child1_amount
   parents1_share_support_amount
   set_progress(57)
+  calculate_parents2_income_available_amount
+  calculate_parents1_income_available_amount
+  calculate_total_available_income_amount
+  calculate_applicable_income_amount 
+  calculate_one_child_support_amount
+  calculate_parents1_income_share_percent
+  calculate_parents2_income_share_percent
   calculate_parents1_low_income_adjustment_amount
   interview_order_child_support_guidelines_worksheet = True
 ---
@@ -169,19 +177,23 @@ right: |
   
   **Box 3** should be selected if more than one child is covered by the order and they do not all live with the same parent. For example one child lives mostly with one parent and the other children live with the other parent. If each parent has atleast one child who lives with them the majority of the time, or each parent's house is the home for one or more children, this is the correct box to select.
 ---
+id: sets parenting_arangment
+depends on:
+  - parenting_arangment
 code: |
-  if parenting_arangment == 'Box 1 Parenting and financial responsibilties are **shared** mostly equally.':
+  if parenting_arangment == 'shared':
     shared_equal_yes = True
     two_thirds_yes = False
     split_children_yes = False
-  elif parenting_arangment == 'Box 2 The children live with one parent about **two-thirds** of the time.':
+  elif parenting_arangment == 'two-thirds':
     shared_equal_yes = False
     two_thirds_yes = True
     split_children_yes = False
-  elif parenting_arangment == 'Box 3 The children are **split** between the parents, and each parent has primary custody of atleast one child.':
+  elif parenting_arangment == 'split':
     shared_equal_yes = False
     two_thirds_yes = False
     split_children_yes = True
+  set_parenting_arangment = True 
 ---
 id: What are the parents names?
 question: |
@@ -233,13 +245,12 @@ fields:
       * All kinds of resources the parents may have, like a bedroom for the child or the ability to help with school work; and
       * Each parent’s contribution to post-secondary education costs for the child or other children in the family.
 ---
+depends on:
+  - any_children_over_18 
 code: |
   if any_children_over_18 == False:
     parents1_over_18_number = 0
     parents2_over_18_number = 0
-    
-depends on:
-  - any_children_over_18   
 ---
 id: What does Parents 1 income situation look like
 question: |
@@ -818,14 +829,33 @@ subquestion: |
 
 progress: 100
 ---
+id: calculates total_available_income_amount
+depends on:
+  - parents1_income_available_amount
+  - parents2_income_available_amount
+code : |
+  total_available_income_amount = parents1_income_available_amount + parents2_income_available_amount
+  calculate_total_available_income_amount = True
+---
+id: calculates applicable_income_amount
+depends on: 
+  - total_available_income_amount
+code: |
+ if total_available_income_amount < 7692: 
+   applicable_income_amount = total_available_income_amount
+ else:
+   applicable_income_amount = 7692
+ calculate_applicable_income_amount = True 
+---
+id: assigns parents1_low_income_adjustment
 depends on: 
   - parenting_arangment
   - parents2_share_support_amount
   - parents2_income_available_amount
 code: |    
-  if two_thirds_yes == True:
+  if parenting_arangment == "two-thirds":
     parents1_low_income_adjustment_amount = 0     
-  elif two_thirds_yes == False:
+  else:
     if parents2_share_support_amount > 249:
       parents1_low_income_adjustment_amount = parents1_share_support_amount 
     elif parents2_share_support_amount <= 249:
@@ -849,7 +879,72 @@ code: |
         parents1_low_income_adjustment_amount = 20
   calculate_parents1_low_income_adjustment_amount = True
 ---
-# Problem with this code block and the attachment block. I need if conditions for setting values, cant get them working in this block. 
+id: adds up parent 1 available income
+depends:
+  - parents1_SS_dependency_amount
+  - parents1_weekly_gross_amount
+  - parents1_other_obligations_amount
+  - parents1_health_care_amount
+  - parents1_dental_vision_amount
+code: |
+  if parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount <= 0:
+    parents1_income_available_amount = 0
+  else:
+    parents1_income_available_amount = parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount
+  calculate_parents1_income_available_amount = True
+---
+id: gets parent 2 available income
+depends:
+  - parents2_SS_dependency_amount
+  - parents2_weekly_gross_amount
+  - parents2_other_obligations_amount
+  - parents2_health_care_amount
+  - parents2_dental_vision_amount
+code: |
+  if parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount <= 0:
+    parents2_income_available_amount = 0
+  else:
+    parents2_income_available_amount = parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount
+  calculate_parents2_income_available_amount = True
+---
+id: gets parent 1 income share percentage
+depends on:
+  - parents1_income_available_amount
+  - total_available_income_amount
+code: |
+  parents1_income_share_percent = round((parents1_income_available_amount / total_available_income_amount) * 100)
+  calculate_parents1_income_share_percent = True
+---
+id: gets parent 2 income share percentage
+depends on: 
+  - parents2_income_available_amount
+  - total_available_income_amount
+code: |
+  parents2_income_share_percent = round((parents2_income_available_amount / total_available_income_amount) * 100)
+  calculate_parents2_income_share_percent = True
+---
+id: gets the one child support amount
+depends on:
+  - applicable_income_amount
+code: |
+  if applicable_income_amount <= 210:
+    one_child_support_amount = 12
+  elif applicable_income_amount <= 249:
+    one_child_support_amount = 12 + ((applicable_income_amount - 210) * .2)
+  elif applicable_income_amount <= 750:
+    one_child_support_amount = 12 + (applicable_income_amount * .22)
+  elif applicable_income_amount <= 1400:
+    one_child_support_amount = 165 + ((applicable_income_amount - 750) * .21)
+  elif applicable_income_amount <= 2200:
+    one_child_support_amount = 302 + ((applicable_income_amount - 1400) * .19)
+  elif applicable_income_amount <= 3500:
+    one_child_support_amount = 454 + ((applicable_income_amount - 2200) * .14)
+  elif applicable_income_amount <= 5000:
+    one_child_support_amount = 636 + ((applicable_income_amount - 3500) * .11)
+  elif applicable_income_amount <= 7692:
+    one_child_support_amount = 801 + ((applicable_income_amount - 5000) * .1)
+  calculate_one_child_support_amount = True
+---
 code: |
   signature_fields = []
   parents1_share_support_amount = DAEmpty()
@@ -862,13 +957,13 @@ code: |
   child4_total_amount = parents1_child4_amount + parents2_child4_amount
   child5_total_amount = parents1_child5_amount + parents2_child5_amount
   child1_total_amount = parents1_child1_amount + parents2_child1_amount
-  parents2_income_available_amount = parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount
-  parents1_income_available_amount = parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount
-  total_available_income_amount = parents1_income_available_amount + parents2_income_available_amount
-  parents2_income_share_percent = parents2_income_available_amount / total_available_income_amount
-  parents1_income_share_percent = parents1_income_available_amount / total_available_income_amount
-  applicable_income_amount = DAEmpty()
-  one_child_support_amount = DAEmpty()
+  #parents2_income_available_amount = DAEpmty()
+  #parents1_income_available_amount = DAEmpty()
+  #total_available_income_amount = DAEmpty()
+  #parents2_income_share_percent = DAEmpty()
+  #parents1_income_share_percent = DAEmpty()
+  #applicable_income_amount = DAEmpty()
+  #one_child_support_amount = DAEmpty()
   parents2_adjustments = DAEmpty()
   parents1_adjustments = DAEmpty()
   parents2_support_amount = one_child_support_amount * parents2_adjustments
@@ -981,127 +1076,114 @@ attachments:
       - "child4_total_amount": ${ currency(parents1_child4_amount + parents2_child4_amount) }
       - "child5_total_amount": ${ currency(parents1_child5_amount + parents2_child5_amount) }
       - "child1_total_amount": ${ currency(parents1_child1_amount + parents2_child1_amount) }
-      - "parents2_income_available_amount": ${ currency(parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount) }
-      - "parents1_income_available_amount": ${ currency(parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount) }
-      - "total_available_income_amount": ${ currency(parents1_income_available_amount + parents2_income_available_amount) }
-      - "parents2_income_share_percent": ${ round(parents2_income_available_amount / total_available_income_amount) } %
-      - "parents1_income_share_percent": ${ round(parents1_income_available_amount / total_available_income_amount) } %
+      - "parents2_income_available_amount": ${ currency(parents2_income_available_amount) }
+      - "parents1_income_available_amount": ${ currency(parents1_income_available_amount) }     
+      - "total_available_income_amount": ${ currency(total_available_income_amount) }
+      - "parents2_income_share_percent": ${ parents2_income_share_percent } %
+      - "parents1_income_share_percent": ${ parents1_income_share_percent } %
       - "applicable_income_amount": |
            % if total_available_income_amount < 7692: 
            ${ currency(total_available_income_amount) }
            % else:
-           $7692
+           ${ currency(7692) }
            % endif
-      - "one_child_support_amount": |
-           % if applicable_income_amount <= 210:
-           ${ one_child_support_amount } = 12
-           % elif applicable_income_amount <= 249:
-           ${ one_child_support_amount } = 12 + ((applicable_income_amount - 210) * .2)
-           % elif applicable_income_amount <= 750:
-           ${ one_child_support_amount } = 12 + (applicable_income_amount * .22)
-           % elif applicable_income_amount <= 1400:
-           ${ one_child_support_amount } = 165 + ((applicable_income_amount - 750) * .21)
-           % elif applicable_income_amount <= 2200:
-           ${ one_child_support_amount } = 302 + ((applicable_income_amount - 1400) * .19)
-           % elif applicable_income_amount <= 3500:
-           ${ one_child_support_amount } = 454 + ((applicable_income_amount - 2200) * .14)
-           % elif applicable_income_amount <= 5000:
-           ${ one_child_support_amount } = 636 + ((applicable_income_amount - 3500) * .11)
-           % elif applicable_income_amount <= 7692:
-           ${ one_child_support_amount } = 801 + ((applicable_income_amount - 5000) * .1)
-           % endif
+      - "one_child_support_amount": ${ currency(one_child_support_amount) }           
       - "parents2_adjustments": |
-           % if children_number == 1:
-           ${ parents2_adjustments } = 1
-           % elif children_number == 2:
-           ${ parents2_adjustments } = 1.4
-           % elif children_number == 3:
-           ${ parents2_adjustments } = 1.68
-           % elif children_number == 4:
-           ${ parents2_adjustments } = 1.85
-           % elif children_number == 5:
-           ${ parents2_adjustments } = 1.94
+           % if parents2_total_children_number < 1:
+           0
+           % elif parents2_total_children_number == 1:
+           1
+           % elif parents2_total_children_number == 2:
+           1.4
+           % elif parents2_total_children_number == 3:
+           1.68
+           % elif parents2_total_children_number == 4:
+           1.85
+           % elif parents2_total_children_number == 5:
+           1.94
            % endif
       - "parents1_adjustments": |
-           % if children_number == 1:
-           ${ parents1_adjustments } = 1
-           % elif children_number == 2:
-           ${ parents1_adjustments } = 1.4
-           % elif children_number == 3:
-           ${ parents1_adjustments } = 1.68
-           % elif children_number == 4:
-           ${ parents1_adjustments } = 1.85
-           % elif children_number == 5:
-           ${ parents1_adjustments } = 1.94
+           % if parents1_total_children_number < 1:
+           0
+           % elif parents1_total_children_number == 1:
+           1
+           % elif parents1_total_children_number == 2:
+           1.4
+           % elif parents1_total_children_number == 3:
+           1.68
+           % elif parents1_total_children_number == 4:
+           1.85
+           % elif parents1_total_children_number == 5:
+           1.94
            % endif
       - "parents2_support_amount": ${ one_child_support_amount * parents2_adjustments }
       - "parents1_support_amount": ${ one_child_support_amount * parents1_adjustments }
       - "parents1_children_adjustments": | 
            % if parents1_under_18_children_number == 0:
              % if parents1_over_18_number >= 5:
-             ${ parents1_children_adjustments } = .25
+             .25
              % endif
            % elif parents1_under_18_children_number == 1:
              % if parents1_over_18_number == 1:
-             ${ parents1_children_adjustments } = .07
+             .07
              % elif parents1_over_18_number == 2:
-             ${ parents1_children_adjustments } = .11
+             .11
              % elif parents1_over_18_number == 3:
-             ${ parents1_children_adjustments } = .13
+             .13
              % elif parents1_over_18_number == 4:
-             ${ parents1_children_adjustments } = .14
+             .14
              % endif
            % elif parents1_under_18_children_number == 2:
              % if parents1_over_18_number == 1:
-             ${ parents1_children_adjustments } = .04
+             .04
              % elif parents1_over_18_number == 2:
-             ${ parents1_children_adjustments } = .06
+             .06
              % elif parents1_over_18_number == 3:
-             ${ parents1_children_adjustments } = .07
+             .07
              % endif
            % elif parents1_under_18_children_number == 3:
              % if parents1_over_18_number == 1:
-             ${ parents1_children_adjustments } = .02
+             .02
              % elif parents1_over_18_number == 2:
-             ${ parents1_children_adjustments } = .03
+             .03
              % endif
            % elif parents1_under_18_children_number == 4:
              % if parents1_over_18_number == 1:
-             ${ parents1_children_adjustments } = .01
+             .01
              % endif
            % endif
       - "parents2_children_adjustments": |
            % if parents2_under_18_number == 0:
              % if parents2_over_18_number >= 5:
-             ${ parents2_children_adjustments } = .25
+             .25
              % endif
            % elif parents2_under_18_number == 1:
              % if parents2_over_18_number == 1:
-             ${ parents2_children_adjustments } = .07
+             .07
              % elif parents2_over_18_number == 2:
-             ${ parents2_children_adjustments } = .11
+             .11
              % elif parents2_over_18_number == 3:
-             ${ parents2_children_adjustments } = .13
+             .13
              % elif parents2_over_18_number == 4:
-             ${ parents2_children_adjustments } = .14
+             .14
              % endif
            % elif parents2_under_18_number == 2:
              % if parents2_over_18_number == 1:
-             ${ parents2_children_adjustments } = .04
+             .04
              % elif parents2_over_18_number == 2:
-             ${ parents2_children_adjustments } = .06
+             .06
              % elif parents2_over_18_number == 3:
-             ${ parents2_children_adjustments } = .07
+             .07
              % endif
            % elif parents2_under_18_number == 3:
              % if parents2_over_18_number == 1:
-             ${ parents2_children_adjustments } = .02
+             .02
              % elif parents2_over_18_number == 2:
-             ${ parents2_children_adjustments } = .03
+             .03
              % endif
            % elif parents2_under_18_number == 4:
              % if parents2_over_18_number == 1:
-             ${ parents2_children_adjustments } = .01
+             .01
              % endif
            % endif
       - "parents1_over_18_adjustments_amount": ${ parents1_support_amount * parents1_children_adjustments }
@@ -1115,7 +1197,7 @@ attachments:
       - "parents2_low_income_adjustment_amount": |
           % if two_thirds_yes == True:
             % if parents2_income_available_amount > 249:
-            ${ parents2_low_income_adjustment_amount } =  $ { parents2_share_support_amount }
+            ${ parents2_share_support_amount }
             % elif parents2_income_available_amount <= 249:
               % if parents2_income_available_amount <= 212:
               ${ parents2_low_income_adjustment_amount } = 12
@@ -1174,19 +1256,19 @@ attachments:
           N/A
           % elif two_thirds_yes == False:
             % if parents1_income_available_amount == 0:
-            ${ parents1_income_support_precent } = 100%
+            100%
             % elif parents1_income_available_amount >= .1:
-            ${ parents1_income_support_precent } = ${ parents1_adjusted_support_share_amount / parents1_income_available_amount } %
+            ${ parents1_adjusted_support_share_amount / parents1_income_available_amount }%
             % endif
           % endif
       - "parents2_income_support_precent": |
           % if two_thirds_yes == True:
-          ${ parents2_income_support_precent } = N/A
+          N/A
           % elif two_thirds_yes == False:
             % if parents2_income_available_amount == 0:
-            ${ parents2_income_support_precent } = 100%
+            100%
             % elif parents2_income_available_amount >= .1:
-            ${ parents2_income_support_precent } = ${ parents2_adjusted_support_share_amount / parents1_income_available_amount } %
+            ${ parents2_adjusted_support_share_amount / parents1_income_available_amount }%
             % endif
           % endif
       - "parents1_adjusted_or_greater_amount": ${ parents1_adjusted_or_greater_amount }          
