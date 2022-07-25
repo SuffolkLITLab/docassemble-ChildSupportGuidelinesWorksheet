@@ -86,6 +86,7 @@ code: |
   parents2_child1_amount
   parents1_share_support_amount
   set_progress(57)
+  calculate_parents1_low_income_adjustment_amount
   interview_order_child_support_guidelines_worksheet = True
 ---
 ###################### Main order ######################
@@ -154,9 +155,9 @@ fields:
   - Choose: parenting_arangment
     input type: radio
     choices:
-      - Box 1 Parenting and financial responsibilties are **shared** mostly equally.
-      - Box 2 The children live with one parent about **two-thirds** of the time.
-      - Box 3 The children are **split** between the parents, and each parent has primary custody of atleast one child.
+      - Box 1 Parenting and financial responsibilties are **shared** mostly equally.: shared
+      - Box 2 The children live with one parent about **two-thirds** of the time.: two-thirds
+      - Box 3 The children are **split** between the parents, and each parent has primary custody of atleast one child.: split
 right: |
   ## Need Help?
     
@@ -817,6 +818,37 @@ subquestion: |
 
 progress: 100
 ---
+depends on: 
+  - parenting_arangment
+  - parents2_share_support_amount
+  - parents2_income_available_amount
+code: |    
+  if two_thirds_yes == True:
+    parents1_low_income_adjustment_amount = 0     
+  elif two_thirds_yes == False:
+    if parents2_share_support_amount > 249:
+      parents1_low_income_adjustment_amount = parents1_share_support_amount 
+    elif parents2_share_support_amount <= 249:
+      if parents2_income_available_amount <= 212:
+        parents1_low_income_adjustment_amount = 12
+      elif parents2_income_available_amount == 213:
+        parents1_low_income_adjustment_amount = 13
+      elif parents2_income_available_amount <= 218:
+        parents1_low_income_adjustment_amount = 14
+      elif parents2_income_available_amount <= 223:
+        parents1_low_income_adjustment_amount = 15
+      elif parents2_income_available_amount <= 228:
+        parents1_low_income_adjustment_amount = 16
+      elif parents2_income_available_amount <= 233:
+        parents1_low_income_adjustment_amount = 17
+      elif parents2_income_available_amount <= 238:
+        parents1_low_income_adjustment_amount = 18
+      elif parents2_income_available_amount <= 243:
+        parents1_low_income_adjustment_amount = 19
+      elif parents2_income_available_amount <= 249:
+        parents1_low_income_adjustment_amount = 20
+  calculate_parents1_low_income_adjustment_amount = True
+---
 # Problem with this code block and the attachment block. I need if conditions for setting values, cant get them working in this block. 
 code: |
   signature_fields = []
@@ -1130,34 +1162,7 @@ attachments:
               % endif
             % endif
           % endif
-      - "parents1_low_income_adjustment_amount": |
-          % if two_thirds_yes == True:
-          ${ parents1_low_income_adjustment_amount } =  0     
-          % elif two_thirds_yes == False:
-            % if parents2_share_support_amount > 249:
-            ${ parents1_low_income_adjustment_amount } = ${ parents1_share_support_amount }
-            % elif parents2_share_support_amount <= 249:
-              % if parents2_income_available_amount <= 212:
-              ${ parents1_low_income_adjustment_amount } = 12
-              % elif parents2_income_available_amount == 213:
-              ${ parents1_low_income_adjustment_amount } = 13
-              % elif parents2_income_available_amount <= 218:
-              ${ parents1_low_income_adjustment_amount } = 14
-              % elif parents2_income_available_amount <= 223:
-              ${ parents1_low_income_adjustment_amount } = 15
-              % elif parents2_income_available_amount <= 228:
-              ${ parents1_low_income_adjustment_amount } = 16
-              % elif parents2_income_available_amount <= 233:
-              ${ parents1_low_income_adjustment_amount } = 17
-              % elif parents2_income_available_amount <= 238:
-              ${ parents1_low_income_adjustment_amount } = 18
-              % elif parents2_income_available_amount <= 243:
-              ${ parents1_low_income_adjustment_amount } = 19
-              % elif parents2_income_available_amount <= 249:
-              ${ parents1_low_income_adjustment_amount } = 20
-              % endif
-            % endif
-          % endif
+      - "parents1_low_income_adjustment_amount": ${ parents1_low_income_adjustment_amount }
       - "parents2_benchmark_amount": ${ parents2_benchmark_amount }
       - "parents1_benchmark_amount": ${ parents1_benchmark_amount }
       - "parents2_benchmark_share_amount": ${ parents2_income_share_percent * parents1_benchmark_amount }
@@ -1166,7 +1171,7 @@ attachments:
       - "parents1_adjusted_support_share_amount": ${ parents1_low_income_adjustment_amount + parents1_benchmark_share_amount }
       - "parents1_income_support_precent": |
           % if two_thirds_yes == True:
-          ${ parents1_income_support_precent } = N/A
+          N/A
           % elif two_thirds_yes == False:
             % if parents1_income_available_amount == 0:
             ${ parents1_income_support_precent } = 100%
@@ -1184,16 +1189,60 @@ attachments:
             ${ parents2_income_support_precent } = ${ parents2_adjusted_support_share_amount / parents1_income_available_amount } %
             % endif
           % endif
-      - "parents1_adjusted_or_greater_amount": ${ parents1_adjusted_or_greater_amount }
+      - "parents1_adjusted_or_greater_amount": ${ parents1_adjusted_or_greater_amount }          
+         # % if parents1_income_available_amount >= parents2_available_income_amount * .1:
+         # ${ parents1_adjusted_or_greater_amount } = ${ parents1_adjusted_support_share_amount }
+         # % elif parents1_income_available_amount == N/A:
+         # ${ parents1_adjusted_or_greater_amount } = ${ parents1_adjusted_support_share_amount }
+         # % elif parents1_income_available_amount <= parents2_available_income_amount * .1:
+         #   % if 6D < (parents1 _support_percent + (parents1_income_support_percent * .1)):
+         #   & { parents1_adjusted_or_greater_amount } = 6C
+         #   % elif 6D > (parents1 _support_percent + (parents1_income_support_percent * .1)) * 3A:
+         #     % if parents2_income_available_amount < 12:
+         #     ${ parents1_adjusted_or_greater_amount } = 12           
+         #     % elif parents2_income_available_amount > 12:
+         #     % if parents_1_adjusted_income_amount < (parents1_income_available_amount * .1):
+         #     ${ parents1_adjusted_or_greater_amount } = { parents1_adjusted_support_share_amount }
+         #     % elif 
+         #     ${ 
+         #     % endif
+         #   % endif
+         # % endif
+      #	If 6d { parents1_income_available_amount } is less {<=} than 10% of the other parent's available income { parents2_available_income_amount * .1 } put whichever is less-	
+      # 6c { parents1_adjusted_support_share_amount }, or 
+      #	add 6d plus 10% { (parents1_income_support_percent + (parents1_income_support_percent * .1)) *}. Multiply the answer times the other parent’s income 3a, but not less than an amount from the shaded area of Table A in the Guidelines Chart (12)     
       - "parents2_adjusted_or_greater_amount": ${ parents2_adjusted_or_greater_amount }
-      - "recipient_payor": ${ recipient_payor }
-      - "recipient_payor__1": ${ recipient_payor }
-      - "payors_adjusted_share_amount": ${ payors_adjusted_share_amount }
+      - "recipient_payor": |
+          % if parenting_arangment == "two-thirds":
+          Recipient         
+          % else:
+            % if parents1_adjusted_or_greater_amount < parents2_adjusted_or_greater_amount:
+            Recipient
+            % endif
+          % endif
+      - "recipient_payor__1": |       
+          % if two_thirds_yes == True:
+          Payor
+          % elif two_thirds_yes == False:
+            % if parents2_adjusted_or_greater_amount < parents1_adjusted_or_greater_amount:
+           Recipient
+            % elif parents2_adjusted_or_greater_amount > parents1_adjusted_or_greater_amount:
+            Payor
+            % endif
+          % endif
+          # Unkown variable. Maybe need a new template with better naming configs?
+          # If renaming what happens if I switch naming con for other key ideas (parents1 into parent_a)
+      - "payors_adjusted_share_amount": ${ payors_adjusted_share_amount } 
       - "mass_gov_yes": ${ mass_gov_yes }
       - "recipients_support_income_percent": ${ recipients_support_income_percent }
       - "payors_disparity_adjusted_amount": ${ payors_disparity_adjusted_amount }
-      - "payors_SS_credit_amount": ${ payors_SS_credit_amount }
-      - "payors_obligations_amount": ${ payors_obligations_amount }
+      - "payors_SS_credit_amount": 
+      - "payors_obligations_amount": |
+          % if payors_disparity_adjusted_amount > payors_SS_credit_amount:
+          ${ payors_obligations_amount } = ${ payors_disparity_adjusted_amount - payors_SS_credit_amount }
+          % elif payors_disparity_adjusted_amount <= payors_SS_credit_amount:
+          ${ payors_obligations_amount } = $0
+          % endif
       - "obligations_hardship_yes": ${ obligations_hardship_yes }
       - "payors_support_income_percent_amount": ${ payors_support_income_percent_amount }
       - "combined_additional_income_amount": ${ combined_additional_income_amount }
