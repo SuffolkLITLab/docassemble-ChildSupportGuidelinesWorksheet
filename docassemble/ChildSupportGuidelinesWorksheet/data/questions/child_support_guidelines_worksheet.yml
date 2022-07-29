@@ -96,6 +96,9 @@ code: |
   calculate_parents2_income_share_percent
   calculate_parents1_low_income_adjustment_amount
   calculate_parents2_adjustments
+  calculate_parents1_adjustments
+  calculate_parents1_children_adjustments
+  calculate_parents2_children_adjustments
   interview_order_child_support_guidelines_worksheet = True
 ---
 ###################### Main order ######################
@@ -830,7 +833,7 @@ subquestion: |
 
 progress: 100
 ---
-id: calculates total_available_income_amount
+# calculates total_available_income_amount
 depends on:
   - parents1_income_available_amount
   - parents2_income_available_amount
@@ -838,7 +841,7 @@ code : |
   total_available_income_amount = parents1_income_available_amount + parents2_income_available_amount
   calculate_total_available_income_amount = True
 ---
-id: calculates applicable_income_amount
+# calculates applicable_income_amount
 depends on: 
   - total_available_income_amount
 code: |
@@ -848,7 +851,7 @@ code: |
    applicable_income_amount = 7692
  calculate_applicable_income_amount = True 
 ---
-id: assigns parents1_low_income_adjustment
+# assigns parents1_low_income_adjustment
 depends on: 
   - parenting_arangment
   - parents2_share_support_amount
@@ -880,7 +883,7 @@ code: |
         parents1_low_income_adjustment_amount = 20
   calculate_parents1_low_income_adjustment_amount = True
 ---
-id: adds up parent 1 available income
+# adds up parent 1 available income
 depends:
   - parents1_SS_dependency_amount
   - parents1_weekly_gross_amount
@@ -894,7 +897,7 @@ code: |
     parents1_income_available_amount = parents1_weekly_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount
   calculate_parents1_income_available_amount = True
 ---
-id: gets parent 2 available income
+# gets parent 2 available income
 depends:
   - parents2_SS_dependency_amount
   - parents2_weekly_gross_amount
@@ -908,7 +911,7 @@ code: |
     parents2_income_available_amount = parents2_weekly_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount
   calculate_parents2_income_available_amount = True
 ---
-id: gets parent 1 income share percentage
+# gets parent 1 income share percentage
 depends on:
   - parents1_income_available_amount
   - total_available_income_amount
@@ -916,7 +919,7 @@ code: |
   parents1_income_share_percent = round((parents1_income_available_amount / total_available_income_amount) * 100)
   calculate_parents1_income_share_percent = True
 ---
-id: gets parent 2 income share percentage
+# gets parent 2 income share percentage
 depends on: 
   - parents2_income_available_amount
   - total_available_income_amount
@@ -924,7 +927,7 @@ code: |
   parents2_income_share_percent = round((parents2_income_available_amount / total_available_income_amount) * 100)
   calculate_parents2_income_share_percent = True
 ---
-id: gets the one child support amount
+# gets the one child support amount
 depends on:
   - applicable_income_amount
 code: |
@@ -946,7 +949,9 @@ code: |
     one_child_support_amount = 801 + ((applicable_income_amount - 5000) * .1)
   calculate_one_child_support_amount = True
 ---
-#id:
+#finds parents2_adjustments value
+depends on:
+  - parents2_total_children_number
 code: |
   if parents2_total_children_number < 1:
     parents2_adjustments = 0
@@ -963,9 +968,117 @@ code: |
     parents2_adjustments = 1.94
   calculate_parents2_adjustments = True
 ---
+#finds parents1_adjustments value
+depends on:
+  - parents1_total_children_number 
+code: | 
+  if parents1_total_children_number < 1:
+    parents1_adjustments = 0
+  elif parents1_total_children_number == 1:
+    parents1_adjustments = 1
+  elif parents1_total_children_number == 2:
+    parents1_adjustments = 1.4
+  elif parents1_total_children_number == 3:
+    parents1_adjustments = 1.68
+  elif parents1_total_children_number == 4:
+    parents1_adjustments = 1.85
+  #The PDF is limited to 5 children. The else here assumes 5 children for the order. 
+  else:
+    parents1_adjustments = 1.94    
+  calculate_parents1_adjustments = True
+---
+# assigns value to parents1_children_adjustments
+# based on table c on worksheet
+depends on:
+  - parents1_under_18_children_number
+  - parents1_total_children_number
+code: |
+  if parents1_under_18_children_number == 0:    
+    parents1_children_adjustments = .25
+  elif parents1_under_18_children_number == 1:
+    if parents1_total_children_number - parents1_under_18_children_number == 1: 
+      parents1_children_adjustments = .07
+    elif parents1_total_children_number - parents1_under_18_children_number == 2:
+      parents1_children_adjustments = .11
+    elif parents1_total_children_number - parents1_under_18_children_number == 3:
+      parents1_children_adjustments = .13   
+    elif parents1_total_children_number - parents1_under_18_children_number == 4:
+      parents1_children_adjustments = .14  
+    else:
+      parents1_children_adjustments = 0  
+  elif parents1_under_18_children_number == 2:
+    if parents1_total_children_number - parents1_under_18_children_number == 1:
+      parents1_children_adjustments = .04
+    elif parents1_total_children_number - parents1_under_18_children_number == 2:
+      parents1_children_adjustments = .06   
+    elif parents1_total_children_number - parents1_under_18_children_number == 3:
+      parents1_children_adjustments = .07
+    else:
+      parents1_children_adjustments = 0
+  elif parents1_under_18_children_number == 3:
+    if parents1_total_children_number - parents1_under_18_children_number == 1:
+      parents1_children_adjustments = .02  
+    elif parents1_total_children_number - parents1_under_18_children_number == 2:
+      parents1_children_adjustments = .03
+    else:
+      parents1_children_adjustments = 0
+  elif parents1_under_18_children_number == 4:
+    if parents1_total_children_number - parents1_under_18_children_number == 1:
+      parents1_children_adjustments = .01
+    else:       
+      parents1_children_adjustments = 0 
+  else:
+    #The PDF is limited to 5 children. The else here assumes 5 children under 18 for the order. 
+    parents1_children_adjustments = 0
+  calculate_parents1_children_adjustments = True
+---
+# assigns value to parents2_children_adjustments
+# based on table c on worksheet
+depends on:
+  - parents2_under_18_number
+  - parents2_total_children_number
+code: |
+  if parents2_under_18_number == 0:    
+    parents2_children_adjustments = .25
+  elif parents2_under_18_number == 1:
+    if parents2_total_children_number - parents2_under_18_number == 1: 
+      parents2_children_adjustments = .07
+    elif parents2_total_children_number - parents2_under_18_number == 2:
+      parents2_children_adjustments = .11
+    elif parents2_total_children_number - parents2_under_18_number == 3:
+      parents2_children_adjustments = .13   
+    elif parents2_total_children_number - parents2_under_18_number == 4:
+      parents2_children_adjustments = .14  
+    else:
+      parents2_children_adjustments = 0  
+  elif parents2_under_18_number == 2:
+    if parents2_total_children_number - parents2_under_18_number == 1:
+      parents2_children_adjustments = .04
+    elif parents2_total_children_number - parents2_under_18_number == 2:
+      parents2_children_adjustments = .06   
+    elif parents2_total_children_number - parents2_under_18_number == 3:
+      parents2_children_adjustments = .07
+    else:
+      parents2_children_adjustments = 0
+  elif parents2_under_18_number == 3:
+    if parents2_total_children_number - parents2_under_18_number == 1:
+      parents2_children_adjustments = .02  
+    elif parents2_total_children_number - parents2_under_18_number == 2:
+      parents2_children_adjustments = .03
+    else:
+      parents2_children_adjustments = 0
+  elif parents2_under_18_number == 4:
+    if parents2_total_children_number - parents2_under_18_number == 1:
+      parents2_children_adjustments = .01
+    else:       
+      parents2_children_adjustments = 0 
+  else:
+    #The PDF is limited to 5 children. The else here assumes 5 children under 18 for the order. 
+    parents2_children_adjustments = 0
+  calculate_parents2_children_adjustments = True
+---
 code: |
   signature_fields = []
-  parents1_share_support_amount = DAEmpty()
   parents1_total_children_number = parents1_over_18_number + parents1_under_18_children_number
   parents2_total_children_number = parents2_over_18_number + parents2_under_18_number
   parents1_all_children_amount = parents1_child1_amount + parents1_child2_amount + parents1_child3_amount + parents1_child4_amount + parents1_child5_amount
@@ -975,23 +1088,13 @@ code: |
   child4_total_amount = parents1_child4_amount + parents2_child4_amount
   child5_total_amount = parents1_child5_amount + parents2_child5_amount
   child1_total_amount = parents1_child1_amount + parents2_child1_amount
-  #parents2_income_available_amount = DAEpmty()
-  #parents1_income_available_amount = DAEmpty()
-  #total_available_income_amount = DAEmpty()
-  #parents2_income_share_percent = DAEmpty()
-  #parents1_income_share_percent = DAEmpty()
-  #applicable_income_amount = DAEmpty()
-  #one_child_support_amount = DAEmpty()
-  #parents2_adjustments = DAEmpty()
-  parents1_adjustments = DAEmpty()
   parents2_support_amount = one_child_support_amount * parents2_adjustments
   parents1_support_amount = one_child_support_amount * parents1_adjustments
-  parents1_children_adjustments = DAEmpty()
-  parents2_children_adjustments = DAEmpty()
   parents1_over_18_adjustments_amount = parents1_support_amount * parents1_children_adjustments
   parents2_over_18_adjustments_amount = parents2_support_amount * parents2_children_adjustments
   parents1_adjusted_support_amount = DAEmpty()
   parents2_adjusted_support_amount = DAEmpty()
+  parents1_share_support_amount = DAEmpty()
   parents2_share_support_amount = DAEmpty()
   parents2_low_income_adjustment_amount = DAEmpty()
   parents1_low_income_adjustment_amount = DAEmpty()
@@ -1107,90 +1210,11 @@ attachments:
            % endif
       - "one_child_support_amount": ${ currency(one_child_support_amount) }           
       - "parents2_adjustments": ${ parents2_adjustments }        
-      - "parents1_adjustments": |
-           % if parents1_total_children_number < 1:
-           0
-           % elif parents1_total_children_number == 1:
-           1
-           % elif parents1_total_children_number == 2:
-           1.4
-           % elif parents1_total_children_number == 3:
-           1.68
-           % elif parents1_total_children_number == 4:
-           1.85
-           % elif parents1_total_children_number == 5:
-           1.94
-           % endif
+      - "parents1_adjustments": ${ parents1_adjustments }
       - "parents2_support_amount": ${ one_child_support_amount * parents2_adjustments }
       - "parents1_support_amount": ${ one_child_support_amount * parents1_adjustments }
-      - "parents1_children_adjustments": | 
-           % if parents1_under_18_children_number == 0:
-             % if parents1_over_18_number >= 5:
-             .25
-             % endif
-           % elif parents1_under_18_children_number == 1:
-             % if parents1_over_18_number == 1:
-             .07
-             % elif parents1_over_18_number == 2:
-             .11
-             % elif parents1_over_18_number == 3:
-             .13
-             % elif parents1_over_18_number == 4:
-             .14
-             % endif
-           % elif parents1_under_18_children_number == 2:
-             % if parents1_over_18_number == 1:
-             .04
-             % elif parents1_over_18_number == 2:
-             .06
-             % elif parents1_over_18_number == 3:
-             .07
-             % endif
-           % elif parents1_under_18_children_number == 3:
-             % if parents1_over_18_number == 1:
-             .02
-             % elif parents1_over_18_number == 2:
-             .03
-             % endif
-           % elif parents1_under_18_children_number == 4:
-             % if parents1_over_18_number == 1:
-             .01
-             % endif
-           % endif
-      - "parents2_children_adjustments": |
-           % if parents2_under_18_number == 0:
-             % if parents2_over_18_number >= 5:
-             .25
-             % endif
-           % elif parents2_under_18_number == 1:
-             % if parents2_over_18_number == 1:
-             .07
-             % elif parents2_over_18_number == 2:
-             .11
-             % elif parents2_over_18_number == 3:
-             .13
-             % elif parents2_over_18_number == 4:
-             .14
-             % endif
-           % elif parents2_under_18_number == 2:
-             % if parents2_over_18_number == 1:
-             .04
-             % elif parents2_over_18_number == 2:
-             .06
-             % elif parents2_over_18_number == 3:
-             .07
-             % endif
-           % elif parents2_under_18_number == 3:
-             % if parents2_over_18_number == 1:
-             .02
-             % elif parents2_over_18_number == 2:
-             .03
-             % endif
-           % elif parents2_under_18_number == 4:
-             % if parents2_over_18_number == 1:
-             .01
-             % endif
-           % endif
+      - "parents1_children_adjustments": ${ parents1_children_adjustments }
+      - "parents2_children_adjustments": ${ parents2_children_adjustments }
       - "parents1_over_18_adjustments_amount": ${ parents1_support_amount * parents1_children_adjustments }
       - "parents2_over_18_adjustments_amount": ${ parents2_support_amount * parents2_children_adjustments }
       - "parents1_adjusted_support_amount": ${ parents1_support_amount - parents1_over_18_adjustments_amount }
