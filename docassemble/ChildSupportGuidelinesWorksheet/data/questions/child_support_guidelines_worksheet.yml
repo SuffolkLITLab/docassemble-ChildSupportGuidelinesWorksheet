@@ -75,7 +75,9 @@ code: |
   children_number
   set_parenting_arangment
   set_progress(14)
+  set_parents2_under_18_number
   parents1_under_18_number
+  set_both_over_18_number
   parents1_name_full
   parents1_gross_amount
   parents2_gross_amount
@@ -125,11 +127,11 @@ continue button field: child_support_guidelines_worksheet_intro
 question: |
   Child Support Guidelines Worksheet
 subquestion: |
-  This worksheet will help you determine how much child support will be owed.  
+  This guided interview will help you determine how much child support will be owed.  
   
-  To complete the worksheet you will need income and expense information for **both parents**. You may estimate these numbers if you do not have exact figures, but the results you will get will not be compeltly accurate. 
+  To complete the interview you need to have income and expense information for **both parents**. Use the other parent’s Financial Statement if you have it. If you do not know the other parent’s information, put in what you think it is.  
   
-  If you click [HERE](https://www.mass.gov/doc/2021-child-support-guidelines/download), you will be brought to the official Massachusetts guidlines for this worksheet. This interview uses those guidlines to make it more digestable and approachable to litigants. 
+  This interview is intended to make the [Child Support Worksheet](https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021) a simpiler and less time consuming process to complete. It is based on the Massachusetts [Child Support Guidlines for 2021](https://www.mass.gov/doc/2021-child-support-guidelines/download). It will create a completed copy of the Child Support Worksheet.
 ---
 id: Preparer information
 question: |
@@ -170,17 +172,19 @@ fields:
     choices:
       - Box 1 Parenting and financial responsibilties are **shared** mostly equally.: shared
       - Box 2 The children live with one parent about **two-thirds** of the time.: two-thirds
-      - Box 3 The children are **split** between the parents, and each parent has primary custody of atleast one child.: split
-right: |
-  ## Need Help?
-    
-  Pick the choice from the options that you think is most similar to yours. 
-  
-  **Box 1 ** should be selected if the children live with you and the other parent about the same amount of time, and you and the other parent have mostly equal financial responsibility for the children.
-  
-  **Box 2** should be selected if the children live with one parent at least two-thirds of the time. This is the case when children live with one parent Monday-Friday, or when the children stay with one parent for one week, but the other for two. 
-  
-  **Box 3** should be selected if more than one child is covered by the order and they do not all live with the same parent. For example one child lives mostly with one parent and the other children live with the other parent. If each parent has atleast one child who lives with them the majority of the time, or each parent's house is the home for one or more children, this is the correct box to select.
+      - Box 3 The children are **split** between the parents, and each parent has primary custody of atleast one child.: split      
+  - "You said that a parent has the children 2/3rds or more of the time, whats their name?": parents1_name_full
+    show if: 
+      variable: parenting_arangment
+      is: two-thirds
+#  help: |  
+#    Pick the choice from the options that you think is most similar to yours.   
+#    
+#    **Box 1 ** should be selected if the children live with you and the other parent about the same amount of time, and you and the other parent have mostly equal financial responsibility for the children.
+#    
+#    **Box 2** should be selected if the children live with one parent at least two-thirds of the time. This is the case when children live with one parent Monday-Friday, or when the children stay with one parent for one week, but the other for two. 
+#    
+#    **Box 3** should be selected if more than one child is covered by the order and they do not all live with the same parent. For example one child lives mostly with one parent and the other children live with the other parent. If each parent has atleast one child who lives with them the majority of the time, or each parent's house is the home for one or more children, this is the correct box to select.
 ---
 id: sets parenting_arangment
 depends on:
@@ -202,35 +206,38 @@ code: |
 ---
 id: What are the parents names?
 question: |
-  What are the names of the parents involved in this order?  
-subquestion: |
-  If you checked **Box 2** on the previous question, put the name of the parent with whom the children primarily live in the field asking for the **Parent A**, and the other parent’s name in **Parent B**. 
-  
-  If you checked **Box 1** or **3**, it does not matter which field the parent's name goes into.
-
-  As a **reminder** you selected **${ parenting_arangment }**
+  What are the names of the parents involved in this order?   
 fields:    
-  - "**Parent A**?": parents1_name_full
-    maxlength: 29  
-  - "**Parent B**?": parents2_name_full
+  - "What is the first parents name?": parents1_name_full
+    maxlength: 29
+    #hide if: 
+    #  variable: parenting_arangment
+    #  is: "two-thirds"
+  - "What is the other parents name?": parents2_name_full
     maxlength: 29 
+---
+# sets parents2 children to 0 when needed.
+depends on:
+  - parenting_arangment
+code: |
+  if parenting_arangment == "two-thirds":
+    parents2_under_18_number = 0
+  set_parents2_under_18_number = True
 ---
 id: What are the ages of the children this order concerns?
 question: |
   What is the number and the age's of the children for whom each parent may be eligible to receive support?
 subquestion: |
-  Please use the instructions to the right to decide what numbers to enter.
-  
-  As a **reminder** you selected **${ parenting_arangment }**
+  As a **reminder** you said the parenting arangment was **${ parenting_arangment }**.
+
+  If the parenting arangment is **shared**, put **${ children_number }** each parents box.
+       
+  If the parenting arangment is **two-thirds**, and the children are with ${ parents1_name_full } more than **two-third's** of the time put **${ children_number }** in ${ parents1_name_full }'s box and keep **0** in ${ parents2_name_full }'s box.
+      
+  If the parenting arangment is **split**, meaning some children live with each parent, put the number of children living with each parent in the respective fields. 
 fields:
   - "How many of ${ parents1_name_full }'s children are under 18 years old?": parents1_under_18_number
-    datatype: number
-    note: |
-       If you selected **BOX 1** and the parental responsibilty is **shared**, put **${ children_number }** each parents box.
-       
-       If you selected **BOX 2** and the children are with ${ parents1_name_full } more than **two-third's** of the time put **${ children_number }** in ${ parents1_name_full }'s box and **0** for ${ parents2_name_full }.
-      
-       If you selected **BOX 3** and the parental responsibilty is **split**, meaning some children live with each parent, put the number of children living with each parent in the respective fields.     
+    datatype: number    
   - "How many of ${ parents2_name_full }'s children are under 18 years old?": parents2_under_18_number
     datatype: number
   - "Are there children involved that are over 18 years old?": any_children_over_18
@@ -241,7 +248,8 @@ fields:
   - "How many of ${ parents2_name_full }'s children are over 18 years old?": parents2_over_18_number
     datatype: number
     show if: any_children_over_18
-    note: |
+# want this under note to ${ show if: any_children_over_18 } 
+under: |
       The judge will look at the following reasons for including these children in the order:
      
       * Your child’s living situation, like why your child lives with you, and when and how much time they live with you;
@@ -250,12 +258,14 @@ fields:
       * All kinds of resources the parents may have, like a bedroom for the child or the ability to help with school work; and
       * Each parent’s contribution to post-secondary education costs for the child or other children in the family.
 ---
+# sets over_18 values if none
 depends on:
   - any_children_over_18 
 code: |
   if any_children_over_18 == False:
     parents1_over_18_number = 0
     parents2_over_18_number = 0
+  set_both_over_18_number = True
 ---
 id: What does Parents 1 income situation look like
 question: |
@@ -266,7 +276,9 @@ fields:
   - "What is ${ parents1_name_full } gross weekly income?": parents1_gross_amount
     datatype: currency
     min: 0
-  - "How much is ${ parents1_name_full } Social Security benefit?": parents1_SS_dependency_amount
+    help: |
+      **Gross Weekly Income** is your income before taxes and deductions are taken out. It does not include public assistance like welfare, TAFDC, SSI, and Food Stamps SNAP.
+  - "What is ${ parents1_name_full } Social Security benefit?": parents1_SS_dependency_amount
     datatype: currency
     min: 0
   - "How much of ${ parents1_name_full } SS benefit is sent directly to them?": parents1_SS_dependency_recievied_amount
@@ -990,7 +1002,7 @@ code: |
   calculate_parents1_child_number_adjustments = True
 ---
 # assigns value to parents1_children_adjustments
-# based on table c on worksheet
+# based on table c on worksheet (adjustments for children >18 years old)
 depends on:
   - parents1_under_18_number
   - parents1_total_children_number
@@ -1314,8 +1326,8 @@ attachments:
       - "parents1_benchmark_amount": ${ parents1_benchmark_amount }
       - "parents1_other_benchmark_share_amount": ${ parents2_income_share_percent * parents1_benchmark_amount }
       - "parents2_other_benchmark_share_amount": ${ parents1_income_share_percent * parents2_benchmark_amount }
-      - "parents1_other_adjusted_support_share": ${ parents1_other_low_income_adjusted + parents1_other_benchmark_share_amount }
-      - "parents2_other_adjusted_support_share": ${ parents2_other_low_income_adjusted + parents2_other_benchmark_share_amount }
+      - "parents1_other_adjusted_support_share": ${ parents1_other_adjusted_support_share }
+      - "parents2_other_adjusted_support_share": ${ parents2_other_adjusted_support_share }
       - "parents1_income_support_precent": |
           % if two_thirds_yes == True:
           N/A
@@ -1333,7 +1345,7 @@ attachments:
             % if parents2_available_income_amount == 0:
             100%
             % elif parents2_available_income_amount >= .1:
-            ${ parents1_other_adjusted_support_share / parents1_available_income_amount }%
+            ${ parents1_other_adjusted_support_share / parents1_available_income_amount } %
             % endif
           % endif
       - "parents2_other_limited_adjusted_amount": ${ parents2_other_limited_adjusted_amount }          
