@@ -87,7 +87,6 @@ code: |
   parents1_child2_amount
   set_progress(42)
   parents2_child1_amount
-  parents1_share_support_amount
   set_progress(57)
   calculate_parents2_available_income_amount
   calculate_parents1_available_income_amount
@@ -102,6 +101,10 @@ code: |
   calculate_parents1_child_number_adjustments
   calculate_parents1_children_adjustments
   calculate_parents2_children_adjustments
+  set_parents1_share_support_percent
+  set_parents2_share_support_amount
+  set_parents1_other_share_support
+  set_parents2_other_share_support
   interview_order_child_support_guidelines_worksheet = True
 ---
 ###################### Main order ######################
@@ -864,38 +867,6 @@ code: |
    applicable_income_amount = 7692
  calculate_applicable_income_amount = True 
 ---
-# assigns parents1_low_income_adjustment
-depends on: 
-  - parenting_arangment
-  - parents2_share_support_amount
-  - parents2_available_income_amount
-code: |    
-  if parenting_arangment == "two-thirds":
-    parents2_other_low_income_adjusted = 0     
-  else:
-    if parents2_share_support_amount > 249:
-      parents2_other_low_income_adjusted = parents1_share_support_amount 
-    elif parents2_share_support_amount <= 249:
-      if parents2_available_income_amount <= 212:
-        parents2_other_low_income_adjusted = 12
-      elif parents2_available_income_amount == 213:
-        parents2_other_low_income_adjusted = 13
-      elif parents2_available_income_amount <= 218:
-        parents2_other_low_income_adjusted = 14
-      elif parents2_available_income_amount <= 223:
-        parents2_other_low_income_adjusted = 15
-      elif parents2_available_income_amount <= 228:
-        parents2_other_low_income_adjusted = 16
-      elif parents2_available_income_amount <= 233:
-        parents2_other_low_income_adjusted = 17
-      elif parents2_available_income_amount <= 238:
-        parents2_other_low_income_adjusted = 18
-      elif parents2_available_income_amount <= 243:
-        parents2_other_low_income_adjusted = 19
-      elif parents2_available_income_amount <= 249:
-        parents2_other_low_income_adjusted = 20
-  calculate_parents2_other_low_income_adjusted = True
----
 # adds up parent 1 available income
 depends:
   - parents1_SS_dependency_amount
@@ -1053,7 +1024,10 @@ depends on:
   - parents2_total_children_number
 code: |
   if parents2_under_18_number == 0:    
-    parents2_children_adjustments = .25
+    if parents2_total_children_number - parents2_under_18_number >= 1:
+      parents2_children_adjustments = .25
+    else:
+      parents2_children_adjustments = 0
   elif parents2_under_18_number == 1:
     if parents2_total_children_number - parents2_under_18_number == 1: 
       parents2_children_adjustments = .07
@@ -1091,86 +1065,111 @@ code: |
     parents2_children_adjustments = 0
   calculate_parents2_children_adjustments = True
 ---
-# parents1_other_low_income_adjusted is under Parent A column
-# Logic and math are coming from shaded area of table A, not Child Support Guidlines Chart.
-depends on:
-  - parents1_available_income_amount
-  - parenting_arangment
-  - parents2_share_support_amount
+# setting parents1_share_support_amount - 5a, Parent A
+depends:
+  - parents1_income_share_percent
+  - parents1_adjusted_support_amount
 code: |
-  '''
-  if 2/3:
-    b = 0
-    if b > 249:
-      a = b_other_thing
-    else:
-      if round(applicable_income_amount) <= 210:
-        a = 12 
-      else:
-        a = 12 + ((applicable_income_amount - 210) * .2)
-  '''
+  parents1_share_support_amount = round(parents1_adjusted_support_amount * parents1_income_share_percent)
+  set_parents1_share_support_percent = True
+---
+#setting parents2_share_support_amount - 5a, Parent B
+depends: 
+ - parents2_income_share_percent
+ - parents2_adjusted_support_amount
+ - parenting_arangment
+code: |
+ if parenting_arangment == "two-thirds":
+   parents2_share_support_amount = DAEmpty()
+ else:
+   parents2_share_support_amount = round(parents2_adjusted_support_amount * parents2_income_share_percent)
+ set_parents2_share_support_amount = True
+---
+#setting parents1_other_share_support, 5b, Parent A
+depends:
+  - parents1_share_support_amount
+  - parents1_adjusted_support_amount
+code: |
+  parents1_other_share_support = parents1_share_support_amount - parents1_adjusted_support_amount 
+  set_parents1_other_share_support = True
+---
+#setting parents2_other_share_support, 5b, Parent B
+depends:
+ - parents2_share_support_amount
+ - parents2_adjusted_support_amount
+code: |
+  if parenting_arangment == 'two-thirds':
+    parents2_other_share_support = DAEmpty()
+  else:
+    parents2_other_share_support = parents2_share_support_amount - parents2_adjusted_support_amount
+  set_parents2_other_share_support = True
+---
+#setting parents1_other_low_income_adjusted, 5c, Parent A
+#Logic and math are coming from shaded area of table A, not Child Support Guidlines Chart.
+depends on:
+  - parenting_arangment
+  - parents2_available_income_amount
+  - parents1_other_share_support
+code: |
   if parenting_arangment == "two-thirds":
-    parents1_other_low_income_adjusted = 0
     if parents2_available_income_amount > 249:
-      parents2_other_low_income_adjusted = parents2_share_support_amount
+      parents1_other_low_income_adjusted = parents1_other_share_support
     else:
-      if round(applicable_income_amount) <= 210:
-        parents2_other_low_income_adjusted = 12 
-      else:
-        parents2_other_low_income_adjusted = 12 + ((applicable_income_amount - 210) * .2)
+      if parents2_available_income_amount <= 249:
+        if parents2_available_income_amount <= 212:
+          parents1_other_low_income_adjusted = 12
+        elif parents2_available_income_amount == 213:
+          parents1_other_low_income_adjusted = 13
+        elif parents2_available_income_amount <= 218:
+          parents1_other_low_income_adjusted = 14
+        elif parents2_available_income_amount <= 223:
+          parents1_other_low_income_adjusted = 15
+        elif parents2_available_income_amount <= 228:
+          parents1_other_low_income_adjusted = 16
+        elif parents2_available_income_amount <= 233:
+          parents1_other_low_income_adjusted = 17
+        elif parents2_available_income_amount <= 238:
+          parents1_other_low_income_adjusted = 18
+        elif parents2_available_income_amount <= 243:
+          parents1_other_low_income_adjusted = 19
+        elif parents2_available_income_amount <= 249:
+          parents1_other_low_income_adjusted = 20
+  else:
+    parents1_other_low_income_adjusted = parents1_other_share_support
+  calculate_parents1_other_low_income_adjusted = True
+---
+#sets parents2_other_low_income_adjusted, 5c, Parent B
+#Logic and math are coming from shaded area of table A, not Child Support Guidlines Chart.
+depends on: 
+  - parenting_arangment
+  - parents2_other_share_support
+  - parents1_available_income_amount
+code: |    
+  if parenting_arangment == "two-thirds":
+    parents2_other_low_income_adjusted = 0     
   else:
     if parents1_available_income_amount > 249:
-      parents1_other_low_income_adjusted = parents2_share_support_amount
-    
-  #   parents1_other_low_income_adjusted = 100          
-  calculate_parents1_other_low_income_adjusted = True
-#% if two_thirds_yes == True:
-#          
-#              % if parents2_available_income_amount <= 212:
-#              ${ parents1_other_low_income_adjusted } = 12
-#              % elif parents2_available_income_amount == 213:
-#              ${ parents1_other_low_income_adjusted } = 13
-#              % elif parents2_available_income_amount <= 218:
-#              ${ parents1_other_low_income_adjusted } = 14
-#              % elif parents2_available_income_amount <= 223:
-#              ${ parents1_other_low_income_adjusted } = 15
-#              % elif parents2_available_income_amount <= 228:
-#              ${ parents1_other_low_income_adjusted } = 16
-#              % elif parents2_available_income_amount <= 233:
-#              ${ parents1_other_low_income_adjusted } = 17
-#              % elif parents2_available_income_amount <= 238:
-#              ${ parents1_other_low_income_adjusted } = 18
-#              % elif parents2_available_income_amount <= 243:
-#              ${ parents1_other_low_income_adjusted } = 19
-#              % elif parents2_available_income_amount <= 249:
-#              ${ parents1_other_low_income_adjusted } = 20
-#              % endif            
-#            % endif
-#          % elif two_thirds_yes == False:
-#            % if parents1_available_income_amount > 249:
-#            ${ parents1_other_low_income_adjusted } = ${ parents2_share_support_amount }
-#            % elif parents1_share_support_amount <= 249:
-#              % if parents1_available_income_amount <= 212:
-#              ${ parents1_other_low_income_adjusted } = 12
-#              % elif parents1_available_income_amount == 213:
-#              ${ parents1_other_low_income_adjusted } = 13
-#              % elif parents1_available_income_amount <= 218:
-#              ${ parents1_other_low_income_adjusted } = 14
-#              % elif parents1_available_income_amount <= 223:
-#              ${ parents1_other_low_income_adjusted } = 15
-#              % elif parents1_available_income_amount <= 228:
-#              ${ parents1_other_low_income_adjusted } = 16
-#              % elif parents1_available_income_amount <= 233:
-#              ${ parents1_other_low_income_adjusted } = 17
-#              % elif parents1_available_income_amount <= 238:
-#              ${ parents1_other_low_income_adjusted } = 18
-#              % elif parents1_available_income_amount <= 243:
-#              ${ parents1_other_low_income_adjusted } = 19
-#              % elif parents1_available_income_amount <= 249:
-#              ${ parents1_other_low_income_adjusted } = 20
-#              % endif
-#            % endif
-#          % endif
+      parents2_other_low_income_adjusted = parents2_other_share_support
+    elif parents1_available_income_amount <= 249:
+      if parents1_available_income_amount <= 212:
+        parents2_other_low_income_adjusted = 12
+      elif parents1_available_income_amount == 213:
+        parents2_other_low_income_adjusted = 13
+      elif parents1_available_income_amount <= 218:
+        parents2_other_low_income_adjusted = 14
+      elif parents1_available_income_amount <= 223:
+        parents2_other_low_income_adjusted = 15
+      elif parents1_available_income_amount <= 228:
+        parents2_other_low_income_adjusted = 16
+      elif parents1_available_income_amount <= 233:
+        parents2_other_low_income_adjusted = 17
+      elif parents1_available_income_amount <= 238:
+        parents2_other_low_income_adjusted = 18
+      elif parents1_available_income_amount <= 243:
+        parents2_other_low_income_adjusted = 19
+      elif parents1_available_income_amount <= 249:
+        parents2_other_low_income_adjusted = 20
+  calculate_parents2_other_low_income_adjusted = True
 ---
 code: |
   signature_fields = []
@@ -1189,8 +1188,6 @@ code: |
   parents2_over_18_adjustments_amount = parents2_support_amount * parents2_children_adjustments
   parents1_adjusted_support_amount = DAEmpty()
   parents2_adjusted_support_amount = DAEmpty()
-  parents1_share_support_amount = DAEmpty()
-  parents2_share_support_amount = DAEmpty()
   parents1_other_low_income_adjusted = DAEmpty()
   parents2_other_low_income_adjusted = DAEmpty()
   parents2_benchmark_amount = DAEmpty()
@@ -1213,8 +1210,7 @@ code: |
   payors_support_income_percent_amount = DAEmpty()
   combined_additional_income_amount = DAEmpty()
   parents1_additional_income_amount = DAEmpty()
-  parents2_additional_income_amount = DAEmpty()
-  parents1_other_share_support = DAEmpty()
+  parents2_additional_income_amount = DAEmpty() 
   parents2_other_share_support = DAEmpty()
 ---
 objects:
@@ -1316,9 +1312,14 @@ attachments:
       - "parents2_over_18_adjustments_amount": ${ parents2_support_amount * parents2_children_adjustments }
       - "parents1_adjusted_support_amount": ${ parents1_support_amount - parents1_over_18_adjustments_amount }
       - "parents2_adjusted_support_amount": ${ parents2_support_amount - parents2_over_18_adjustments_amount }
-      - "parents1_share_support_amount":  ${ round(parents1_income_share_percent * parents1_adjusted_support_amount) }
+      - "parents1_share_support_amount":  ${ parents1_share_support_amount }
       - "parents2_other_share_support": ${ parents2_other_share_support }
-      - "parents2_share_support_amount": ${ round(parents2_income_share_percent * parents2_adjusted_support_amount) }
+      - "parents2_share_support_amount": |
+           % if parents2_share_support_amount == DAEmpty():
+           N/A
+           % else:
+           parents2_share_support_amount = parents2_share_support_amount
+           % endif
       - "parents1_other_share_support": ${ parents1_other_share_support }
       - "parents1_other_low_income_adjusted": ${ parents1_other_low_income_adjusted }
       - "parents2_other_low_income_adjusted": ${ parents2_other_low_income_adjusted }
