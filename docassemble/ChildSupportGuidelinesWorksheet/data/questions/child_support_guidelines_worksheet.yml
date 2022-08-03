@@ -1442,5 +1442,5 @@ attachments:
       - "obligations_hardship_yes": ${ obligations_hardship_yes }
       - "payors_support_income_percent_amount": ${ payors_support_income_percent_amount }
       - "combined_additional_income_amount": ${ currency(combined_additional_income_amount) }
-      - "parents1_additional_income_amount": ${ combined_additional_income_amount * parents1_income_share_percent } %
-      - "parents2_additional_income_amount": ${ combined_additional_income_amount * parents1_income_share_percent } %
+      - "parents1_additional_income_amount": ${ combined_additional_income_amount * round(parents1_available_income_amount / combined_available_income_amount) } %
+      - "parents2_additional_income_amount": ${ combined_additional_income_amount * round(parents2_available_income_amount / combined_available_income_amount) } %
