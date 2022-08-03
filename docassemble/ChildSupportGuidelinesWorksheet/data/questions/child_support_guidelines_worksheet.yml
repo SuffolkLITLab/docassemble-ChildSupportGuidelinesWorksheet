@@ -105,6 +105,7 @@ code: |
   set_parents2_share_support_amount
   set_parents1_other_share_support
   set_parents2_other_share_support
+  set_combined_additional_income_amount
   interview_order_child_support_guidelines_worksheet = True
 ---
 ###################### Main order ######################
@@ -1194,6 +1195,17 @@ code: |
 #code: |
 #  parents2_other_benchmark_share_amount = parents1_income_share_percent * parents2_benchmark_amount
 ---
+#sets combined_additional_income_amount, 8a
+# 3b - $7,692 or $0, whichever is more
+depends:
+  - combined_available_income_amount
+code: |
+  if combined_available_income_amount - 7692 > 0:
+    combined_additional_income_amount = combined_available_income_amount - 7692
+  else:
+    0
+  set_combined_additional_income_amount = True
+---
 code: |
   signature_fields = []
   parents1_total_children_number = parents1_over_18_number + parents1_under_18_number
@@ -1229,7 +1241,6 @@ code: |
   payors_obligations_amount = DAEmpty()
   obligations_hardship_yes = DAEmpty()
   payors_support_income_percent_amount = DAEmpty()
-  combined_additional_income_amount = DAEmpty()
   parents1_additional_income_amount = DAEmpty()
   parents2_additional_income_amount = DAEmpty()
   parents1_other_benchmark_share_amount = DAEmpty()
@@ -1421,7 +1432,7 @@ attachments:
       - "mass_gov_yes": ${ mass_gov_yes }
       - "recipients_support_income_percent": ${ recipients_support_income_percent }
       - "payors_disparity_adjusted_amount": ${ payors_disparity_adjusted_amount }
-      - "payors_SS_credit_amount": 
+      - "payors_SS_credit_amount": ${ payors_SS_credit_amount }
       - "payors_obligations_amount": |
           % if payors_disparity_adjusted_amount > payors_SS_credit_amount:
           ${ payors_obligations_amount } = ${ payors_disparity_adjusted_amount - payors_SS_credit_amount }
@@ -1430,6 +1441,6 @@ attachments:
           % endif
       - "obligations_hardship_yes": ${ obligations_hardship_yes }
       - "payors_support_income_percent_amount": ${ payors_support_income_percent_amount }
-      - "combined_additional_income_amount": ${ combined_additional_income_amount }
-      - "parents1_additional_income_amount": ${ parents1_additional_income_amount }
-      - "parents2_additional_income_amount": ${ parents2_additional_income_amount }
+      - "combined_additional_income_amount": ${ currency(combined_additional_income_amount) }
+      - "parents1_additional_income_amount": ${ combined_additional_income_amount * parents1_income_share_percent } %
+      - "parents2_additional_income_amount": ${ combined_additional_income_amount * parents1_income_share_percent } %
