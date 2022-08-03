@@ -1074,13 +1074,14 @@ code: |
   set_parents1_share_support_percent = True
 ---
 #setting parents2_share_support_amount - 5a, Parent B
+#rules from MLRI Guidlines have parents2_share_support_amount blank if two-thirds true. Set to 1 here and will be displayed as DAEmpty() on form. Potential problems in future. 
 depends: 
  - parents2_income_share_percent
  - parents2_adjusted_support_amount
  - parenting_arangment
 code: |
  if parenting_arangment == "two-thirds":
-   parents2_share_support_amount = DAEmpty()
+   parents2_share_support_amount = 1
  else:
    parents2_share_support_amount = round(parents2_adjusted_support_amount * parents2_income_share_percent)
  set_parents2_share_support_amount = True
@@ -1094,12 +1095,13 @@ code: |
   set_parents1_other_share_support = True
 ---
 #setting parents2_other_share_support, 5b, Parent B
+#rules from MLRI Guidlines have parents2_share_support_amount blank if two-thirds true. Set to 1 here and will be displayed as DAEmpty() on form. Potential problems in future.
 depends:
  - parents2_share_support_amount
  - parents2_adjusted_support_amount
 code: |
   if parenting_arangment == 'two-thirds':
-    parents2_other_share_support = DAEmpty()
+    parents2_other_share_support = 1
   else:
     parents2_other_share_support = parents2_share_support_amount - parents2_adjusted_support_amount
   set_parents2_other_share_support = True
@@ -1171,6 +1173,27 @@ code: |
         parents2_other_low_income_adjusted = 20
   calculate_parents2_other_low_income_adjusted = True
 ---
+#6B
+#For Parent B: Parent A 3c x Parent B 6a
+---
+#setting parents1_other_benchmark_share_amount, 6b Parent A
+#trigger problems?
+#potentially intervening variable, coudl just use the (parents2_income_share_percent * parents1_benchmark_amount) in place of any use. 
+#depends:
+#  - parents1_benchmark_amount
+#  - parents2_income_share_percent
+#code:
+#  parents1_other_benchmark_share_amount = parents2_income_share_percent * parents1_benchmark_amount
+#---
+#setting parents2_other_benchmark_share_amount, 6b Parent B
+#trigger problems?
+#potentially intervening variable, coudl just use the (parents1_income_share_percent * parents2_benchmark_amount) in place of any use. 
+#depends:
+#  - parents2_benchmark_amount
+#  - parents1_income_share_percent
+#code: |
+#  parents2_other_benchmark_share_amount = parents1_income_share_percent * parents2_benchmark_amount
+---
 code: |
   signature_fields = []
   parents1_total_children_number = parents1_over_18_number + parents1_under_18_number
@@ -1192,8 +1215,6 @@ code: |
   parents2_other_low_income_adjusted = DAEmpty()
   parents2_benchmark_amount = DAEmpty()
   parents1_benchmark_amount = DAEmpty()
-  parents1_other_benchmark_share_amount = DAEmpty()
-  parents2_other_benchmark_share_amount = DAEmpty()
   parents1_other_adjusted_support_share = DAEmpty()
   parents2_other_adjusted_support_share = DAEmpty()
   parents1_income_support_precent = DAEmpty()
@@ -1210,8 +1231,9 @@ code: |
   payors_support_income_percent_amount = DAEmpty()
   combined_additional_income_amount = DAEmpty()
   parents1_additional_income_amount = DAEmpty()
-  parents2_additional_income_amount = DAEmpty() 
-  parents2_other_share_support = DAEmpty()
+  parents2_additional_income_amount = DAEmpty()
+  parents1_other_benchmark_share_amount = DAEmpty()
+  parents2_other_benchmark_share_amount = DAEmpty()
 ---
 objects:
   - child_support_guidelines_worksheet_post_interview_instructions: ALDocument.using(title="Instructions", filename="child_support_guidelines_worksheet_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
@@ -1304,31 +1326,36 @@ attachments:
       - "one_child_support_amount": ${ currency(one_child_support_amount) }           
       - "parents2_child_number_adjustments": ${ parents2_child_number_adjustments }        
       - "parents1_child_number_adjustments": ${ parents1_child_number_adjustments }
-      - "parents2_support_amount": ${ one_child_support_amount * parents2_child_number_adjustments }
-      - "parents1_support_amount": ${ one_child_support_amount * parents1_child_number_adjustments }
+      - "parents2_support_amount": ${ currency(one_child_support_amount * parents2_child_number_adjustments) }
+      - "parents1_support_amount": ${ currency(one_child_support_amount * parents1_child_number_adjustments) }
       - "parents1_children_adjustments": ${ parents1_children_adjustments }
       - "parents2_children_adjustments": ${ parents2_children_adjustments }
       - "parents1_over_18_adjustments_amount": ${ parents1_support_amount * parents1_children_adjustments }
       - "parents2_over_18_adjustments_amount": ${ parents2_support_amount * parents2_children_adjustments }
-      - "parents1_adjusted_support_amount": ${ parents1_support_amount - parents1_over_18_adjustments_amount }
-      - "parents2_adjusted_support_amount": ${ parents2_support_amount - parents2_over_18_adjustments_amount }
-      - "parents1_share_support_amount":  ${ parents1_share_support_amount }
-      - "parents2_other_share_support": ${ parents2_other_share_support }
-      - "parents2_share_support_amount": |
-           % if parents2_share_support_amount == DAEmpty():
-           N/A
+      - "parents1_adjusted_support_amount": ${ currency(parents1_support_amount - parents1_over_18_adjustments_amount) }
+      - "parents2_adjusted_support_amount": ${ currency(parents2_support_amount - parents2_over_18_adjustments_amount) }
+      - "parents1_share_support_amount":  ${ parents1_share_support_amount } %
+      - "parents1_other_share_support": ${ parents1_other_share_support } %
+      - "parents2_other_share_support": |
+           % if parents2_other_share_support == 1:
+           ${ DAEmpty() }
            % else:
-           parents2_share_support_amount = parents2_share_support_amount
+           ${ parents2_other_share_support = parents2_other_share_support } % 
            % endif
-      - "parents1_other_share_support": ${ parents1_other_share_support }
-      - "parents1_other_low_income_adjusted": ${ parents1_other_low_income_adjusted }
-      - "parents2_other_low_income_adjusted": ${ parents2_other_low_income_adjusted }
+      - "parents2_share_support_amount": |
+           % if parents2_share_support_amount == 1:
+           ${ DAEmpty() }
+           % else:
+           ${ parents2_share_support_amount = parents2_share_support_amount } %
+           % endif      
+      - "parents1_other_low_income_adjusted": ${ parents1_other_low_income_adjusted } %
+      - "parents2_other_low_income_adjusted": ${ parents2_other_low_income_adjusted } %
       - "parents2_benchmark_amount": ${ parents2_benchmark_amount }
       - "parents1_benchmark_amount": ${ parents1_benchmark_amount }
-      - "parents1_other_benchmark_share_amount": ${ parents2_income_share_percent * parents1_benchmark_amount }
-      - "parents2_other_benchmark_share_amount": ${ parents1_income_share_percent * parents2_benchmark_amount }
-      - "parents1_other_adjusted_support_share": ${ parents1_other_adjusted_support_share }
-      - "parents2_other_adjusted_support_share": ${ parents2_other_adjusted_support_share }
+      - "parents1_other_benchmark_share_amount": ${ parents2_income_share_percent * parents1_benchmark_amount } %
+      - "parents2_other_benchmark_share_amount": ${ parents1_income_share_percent * parents2_benchmark_amount } %
+      - "parents1_other_adjusted_support_share": ${ (parents2_income_share_percent * parents1_benchmark_amount) + parents1_other_low_income_adjusted } %
+      - "parents2_other_adjusted_support_share": ${ (parents1_income_share_percent * parents2_benchmark_amount) + parents2_other_low_income_adjusted } %
       - "parents1_income_support_precent": |
           % if two_thirds_yes == True:
           N/A
