@@ -251,14 +251,7 @@ fields:
     datatype: number
   - "Are there children involved that are over 18 years old?": any_children_over_18
     datatype: yesnoradio
-  - "How many of ${ parents1_name_full }'s children are over 18 years old?": parents1_over_18_number
-    datatype: number
-    show if: any_children_over_18        
-  - "How many of ${ parents2_name_full }'s children are over 18 years old?": parents2_over_18_number
-    datatype: number
-    show if: any_children_over_18
-# want this under note to ${ show if: any_children_over_18 } 
-under: |
+  - note: |
       The judge will look at the following reasons for including these children in the order:
      
       * Your child’s living situation, like why your child lives with you, and when and how much time they live with you;
@@ -266,6 +259,13 @@ under: |
       * Your child’s academic situation, like their progress in school, or if they are part-time of full-time;
       * All kinds of resources the parents may have, like a bedroom for the child or the ability to help with school work; and
       * Each parent’s contribution to post-secondary education costs for the child or other children in the family.
+    show if: any_children_over_18 
+  - "How many of ${ parents1_name_full }'s children are over 18 years old?": parents1_over_18_number
+    datatype: number
+    show if: any_children_over_18        
+  - "How many of ${ parents2_name_full }'s children are over 18 years old?": parents2_over_18_number
+    datatype: number
+    show if: any_children_over_18     
 ---
 # sets over_18 values if none
 depends on:
