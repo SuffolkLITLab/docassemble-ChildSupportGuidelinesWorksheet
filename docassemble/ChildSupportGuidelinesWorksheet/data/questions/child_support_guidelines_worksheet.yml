@@ -1181,6 +1181,19 @@ code: |
   calculate_parents2_other_low_income_adjusted = True
 ---
 #each item in the list is a tupple of (amount for parent 1, total of both parents)
+depends on:
+  - parents1_total_children_number
+  - parents1_children_amounts
+  - child1_total_amount
+  - child2_total_amount
+  - child3_total_amount
+  - child4_total_amount
+  - child5_total_amount
+  - parents1_child1_amount
+  - parents1_child2_amount
+  - parents1_child3_amount
+  - parents1_child4_amount
+  - parents1_child5_amount 
 code: |
   parents1_children_amounts = [
     (parents1_child1_amount, child1_total_amount),
@@ -1194,6 +1207,17 @@ code: |
 #each item in the list is a tupple of (amount for parent 2, total of both parents)
 depends on:
   - parents2_total_children_number
+  - parents2_children_amounts
+  - child1_total_amount
+  - child2_total_amount
+  - child3_total_amount
+  - child4_total_amount
+  - child5_total_amount
+  - parents2_child1_amount
+  - parents2_child2_amount
+  - parents2_child3_amount
+  - parents2_child4_amount
+  - parents2_child5_amount 
 code: |
   parents2_children_amounts = [
     (parents2_child1_amount, child1_total_amount),
