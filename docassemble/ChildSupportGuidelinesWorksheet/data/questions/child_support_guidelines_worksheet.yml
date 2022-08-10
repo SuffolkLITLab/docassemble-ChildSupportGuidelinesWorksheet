@@ -104,8 +104,8 @@ code: |
   calculate_parents2_children_adjustments
   calculate_parents1_other_limited_adjusted_amount
   calculate_parents2_other_limited_adjusted_amount
-  set_parents1_income_support_precent
-  set_parents2_income_support_precent
+  set_parents1_income_support_percent
+  set_parents2_income_support_percent
   set_parents1_share_support_percent
   set_parents2_share_support_amount
   set_parents1_other_share_support
@@ -116,6 +116,7 @@ code: |
   parents2_benchmark_amount
   set_recipients_support_income_percent
   set_payors_disparity_adjusted_amount
+  mass_gov_yes
   interview_order_child_support_guidelines_worksheet = True
 ---
 ###################### Main order ######################
@@ -485,7 +486,7 @@ subquestion: |
 continue button field: child_support_guidelines_worksheet_preview_question    
 ---
 code: |
-  mass_gov_yes = DAEmpty()
+  mass_gov_yes = True
 ---
 id: child support guidelines worksheet review screen
 event: review_child_support_guidelines_worksheet
@@ -764,14 +765,14 @@ review:
     button: |
       **Parents1 adjusted support share amount**:
       ${ parents2_other_adjusted_support_share }
-  - Edit: parents1_income_support_precent
+  - Edit: parents1_income_support_percent
     button: |
-      **Parents1 income support precent**:
-      ${ parents1_income_support_precent }
-  - Edit: parents2_income_support_precent
+      **Parents1 income support percent**:
+      ${ parents1_income_support_percent }
+  - Edit: parents2_income_support_percent
     button: |
-      **Parents2 income support precent**:
-      ${ parents2_income_support_precent }
+      **Parents2 income support percent**:
+      ${ parents2_income_support_percent }
   - Edit: parents2_other_limited_adjusted_amount
     button: |
       **Parents1 adjusted or greater amount**:
@@ -1321,7 +1322,7 @@ code: |
   
   parents2_benchmark_amount = sum(children_amounts)
 ---
-#sets parents1_income_support_precent, 6d, Parent A
+#sets parents1_income_support_percent, 6d, Parent A
 #two_thirds_yes == True wants to have N/A display
 depends on:
   - two_thirds_yes
@@ -1330,15 +1331,15 @@ depends on:
 code: |
   if two_thirds_yes == True:
     # set to 0 for since i need a number, wants to display N/A. pretty sure i need a better solution.
-    parents1_income_support_precent = 0
+    parents1_income_support_percent = 0
   else:
      if parents1_available_income_amount == 0:
-       parents1_income_support_precent = .1
+       parents1_income_support_percent = .1
      else:
-       parents1_income_support_precent = parents1_other_adjusted_support_share / parents1_available_income_amount
-  set_parents1_income_support_precent = True
+       parents1_income_support_percent = parents1_other_adjusted_support_share / parents1_available_income_amount
+  set_parents1_income_support_percent = True
 ---
-#sets parents2_income_support_precent, 6d, Parent B
+#sets parents2_income_support_percent, 6d, Parent B
 #math from MLRI Guidlines 
 depends on:
   - two_thirds_yes
@@ -1347,50 +1348,50 @@ depends on:
 code: |
   if two_thirds_yes == True:
     # set to 0 for since i need a number, wants to display blank. pretty sure i need a better solution.
-    parents2_income_support_precent = 0
+    parents2_income_support_percent = 0
   else:
      if parents2_available_income_amount == 0:
-       parents2_income_support_precent = .1
+       parents2_income_support_percent = .1
      else:
-       parents2_income_support_precent = parents2_other_adjusted_support_share / parents2_available_income_amount
-  set_parents2_income_support_precent = True
+       parents2_income_support_percent = parents2_other_adjusted_support_share / parents2_available_income_amount
+  set_parents2_income_support_percent = True
 ---
 #sets parents1_other_limited_adjusted_amount, 6e, Parent A
 #math from worksheet line
 depends on:
-  - parents1_income_support_precent
+  - parents1_income_support_percent
   - parents2_income_share_percent
   - parents1_other_adjusted_support_share
 code: |
-  if parents1_income_support_precent == 0:
+  if parents1_income_support_percent == 0:
     parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share    
-  elif parents1_income_support_precent >= 10:
+  elif parents1_income_support_percent >= 10:
   #CAN I DO A ELIF (VARIABLE) IS IN SOME RANGE? IE. 2-10
     parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share
   else:
-    if parents1_other_adjusted_support_share <= ((parents1_income_support_precent + (parents1_income_support_precent * .1)) * parents2_available_income_amount):
+    if parents1_other_adjusted_support_share <= ((parents1_income_support_percent + (parents1_income_support_percent * .1)) * parents2_available_income_amount):
       parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share
     else:
-      parents1_other_limited_adjusted_amount = ((parents1_income_support_precent + (parents1_income_support_precent * .1)) * parents2_available_income_amount)
+      parents1_other_limited_adjusted_amount = ((parents1_income_support_percent + (parents1_income_support_percent * .1)) * parents2_available_income_amount)
   calculate_parents1_other_limited_adjusted_amount = True  
 ---
 #sets parents2_other_limited_adjusted_amount, 6e, Parent B
 #math from worksheet line
 depends on:
-  - parents2_income_support_precent
+  - parents2_income_support_percent
   - parents2_other_adjusted_support_share
   - parents1_available_income_amount
 code: |
-  if parents2_income_support_precent == 0:
+  if parents2_income_support_percent == 0:
     parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share    
-  elif parents2_income_support_precent >= 10:
+  elif parents2_income_support_percent >= 10:
   #CAN I DO A ELIF (VARIABLE) IS IN SOME RANGE? IE. 2-10
     parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share
   else:
-    if parents2_other_adjusted_support_share <= ((parents2_income_support_precent + (parents2_income_support_precent * .1)) * parents1_available_income_amount):
+    if parents2_other_adjusted_support_share <= ((parents2_income_support_percent + (parents2_income_support_percent * .1)) * parents1_available_income_amount):
       parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share
     else:
-      parents2_other_limited_adjusted_amount = ((parents2_income_support_precent + (parents2_income_support_precent * .1)) * parents1_available_income_amount)
+      parents2_other_limited_adjusted_amount = ((parents2_income_support_percent + (parents2_income_support_percent * .1)) * parents1_available_income_amount)
   calculate_parents2_other_limited_adjusted_amount = True  
 ---
 #this code defines both Payor and Recipient statuses
@@ -1616,17 +1617,17 @@ attachments:
       - "parents2_other_benchmark_share_amount": ${ currency(round(parents1_income_share_percent * parents2_benchmark_amount)) }
       - "parents1_other_adjusted_support_share": ${ currency(round((parents2_income_share_percent * parents1_benchmark_amount) + parents1_other_low_income_adjusted)) } 
       - "parents2_other_adjusted_support_share": ${ currency(round((parents1_income_share_percent * parents2_benchmark_amount) + parents2_other_low_income_adjusted)) } 
-      - "parents1_income_support_precent": |
+      - "parents1_income_support_percent": |
           % if two_thirds_yes == True:
           N/A
           % else:
-          ${ round(parents1_income_support_precent * 100) } %
+          ${ round(parents1_income_support_percent * 100) } %
           % endif
-      - "parents2_income_support_precent": |
+      - "parents2_income_support_percent": |
           % if two_thirds_yes == True:
           N/A
           % else:
-          ${ round(parents2_income_support_precent * 100) } %
+          ${ round(parents2_income_support_percent * 100) } %
           % endif
       - "parents2_other_limited_adjusted_amount": ${ currency(round(parents2_other_limited_adjusted_amount)) }  
       - "parents1_other_limited_adjusted_amount": ${ currency(round(parents1_other_limited_adjusted_amount)) }
