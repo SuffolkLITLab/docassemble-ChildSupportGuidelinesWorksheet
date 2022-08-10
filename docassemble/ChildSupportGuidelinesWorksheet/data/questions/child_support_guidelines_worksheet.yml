@@ -47,7 +47,7 @@ code: |
   github_repo_name =  'docassemble-ChildSupportGuidelinesWorksheet'
 ---
 code: |
-  interview_short_title = "Determining what is owed for child support payments"
+  interview_short_title = "Determining Child Support Payments"
 ---
 code: |
   al_form_type = "other" 
@@ -103,14 +103,19 @@ code: |
   calculate_parents1_children_adjustments
   calculate_parents2_children_adjustments
   calculate_parents1_other_limited_adjusted_amount
+  calculate_parents2_other_limited_adjusted_amount
   set_parents1_income_support_precent
+  set_parents2_income_support_precent
   set_parents1_share_support_percent
   set_parents2_share_support_amount
   set_parents1_other_share_support
   set_parents2_other_share_support
+  set_recipient_payor_statuses
   set_combined_additional_income_amount 
   parents1_benchmark_amount
   parents2_benchmark_amount
+  set_recipients_support_income_percent
+  set_payors_disparity_adjusted_amount
   interview_order_child_support_guidelines_worksheet = True
 ---
 ###################### Main order ######################
@@ -140,7 +145,7 @@ subquestion: |
   
   To complete the interview you need to have income and expense information for **both parents**. Use the other parent’s Financial Statement if you have it. If you do not know the other parent’s information, put in what you think it is.  
   
-  This interview is intended to make the [Child Support Worksheet](https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021) a simpiler and less time consuming process to complete. It is based on the Massachusetts [Child Support Guidlines for 2021](https://www.mass.gov/doc/2021-child-support-guidelines/download). It will create a completed copy of the Child Support Worksheet.
+  This interview is intended to make the [Child Support Worksheet](https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021) a simpiler and less time consuming process to complete. It is based on the [Massachusetts Child Support Guidlines for 2021](https://www.mass.gov/doc/2021-child-support-guidelines/download).
 ---
 id: Preparer information
 question: |
@@ -270,28 +275,37 @@ code: |
     parents2_over_18_number = 0
   set_both_over_18_number = True
 ---
+# hashed out lines are accesibility improvments. Should ask if they get SS before asking about figures
 id: What does Parents 1 income situation look like
 question: |
-  What does ${ parents1_name_full } income situation look like?
-subquestion: |
-  Weekly gross income and social security benefits collected.
+  What does ${ parents1_name_full } weekly income situation look like?
 fields:
-  - "What is ${ parents1_name_full } gross weekly income?": parents1_gross_amount
+  - "What is ${ parents1_name_full } weekly weekly income?": parents1_gross_amount
     datatype: currency
     min: 0
     help: |
       **Gross Weekly Income** is your income before taxes and deductions are taken out. It does not include public assistance like welfare, TAFDC, SSI, and Food Stamps SNAP.
-  - "Does ${ parents1_name_full } recieve any Social Security benfits?": parents1_ss_yes
-    datatype: yesnoradio
+#  - "Does ${ parents1_name_full } recieve any Social Security benfits?": parents1_ss_yes
+#    datatype: yesnoradio
   - "What is ${ parents1_name_full } Social Security benefit?": parents1_SS_dependency_amount
-    show if: parents1_ss_yes
+#    show if: parents1_ss_yes
     datatype: currency
     min: 0
   - "How much of ${ parents1_name_full } SS benefit is sent directly to them?": parents1_SS_dependency_recievied_amount
-    show if: parents1_ss_yes
+#   show if: parents1_ss_yes
     datatype: currency
     min: 0
 ---
+#sets SS benfits to 0 if they do not recieve them. 
+#depends on:
+#  - parents1_ss_yes
+#code: |
+#  if parents1_ss_yes == False:
+#    parents1_SS_dependency_amount = 0
+#    parents1_SS_dependency_recievied_amount = 0
+#  set_parents1_ss_benefits_zero = True 
+---
+# hashed out lines are accesibility improvments. Should ask if they get SS before asking about figures
 id: What does parents2 income situation look like
 question: |
   What does ${ parents2_name_full } income situation look like?
@@ -301,24 +315,25 @@ fields:
   - "What is ${ parents2_name_full } gross weekly income?": parents2_gross_amount
     datatype: currency
     min: 0
-  - "Does ${ parents2_name_full } recieve any Social Security benfits?": parents2_ss_yes
-    datatype: yesnoradio
+#  - "Does ${ parents2_name_full } recieve any Social Security benfits?": parents2_ss_yes
+#    datatype: yesnoradio
   - "How much is ${ parents2_name_full } Social Security benefit?": parents2_SS_dependency_amount
-    show if: parents2_ss_yesno
+    #show if: parents2_ss_yesno
     datatype: currency
     min: 0
   - "How much of ${ parents2_name_full } SS benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
-    show if: parents2_ss_yesno
+    #show if: parents2_ss_yesno
     datatype: currency
     min: 0
 ---
-depends on:
-  - parents2_ss_yes
-code: |
-  if parents2_ss_yes == False:
-    parents2_SS_dependency_amount = 0
-    parents2_SS_dependency_recievied_amount = 0
-  set_parents2_ss_benefits_zero = True 
+#sets SS benfits to 0 if they do not recieve them. 
+#depends on:
+#  - parents2_ss_yes
+#code: |
+#  if parents2_ss_yes == False:
+#    parents2_SS_dependency_amount = 0
+#    parents2_SS_dependency_recievied_amount = 0
+#  set_parents2_ss_benefits_zero = True 
 ---
 id: How much does Parents 1 pay for health and other expenses
 question: |
@@ -1311,36 +1326,130 @@ code: |
 depends on:
   - two_thirds_yes
   - parents1_available_income_amount
+  - parents1_other_adjusted_support_share
 code: |
   if two_thirds_yes == True:
-    parents1_income_support_precent = ()
+    # set to 0 for since i need a number, wants to display N/A. pretty sure i need a better solution.
+    parents1_income_support_precent = 0
   else:
      if parents1_available_income_amount == 0:
-       parents1_income_support_precent = 100
+       parents1_income_support_precent = .1
      else:
-       parents1_income_support_precent = parents1_other_adjusted_support_share / parents1_available_income_amount          
+       parents1_income_support_precent = parents1_other_adjusted_support_share / parents1_available_income_amount
   set_parents1_income_support_precent = True
 ---
+#sets parents2_income_support_precent, 6d, Parent B
+#math from MLRI Guidlines 
+depends on:
+  - two_thirds_yes
+  - parents2_available_income
+  - parents2_other_adjusted_support_share
+code: |
+  if two_thirds_yes == True:
+    # set to 0 for since i need a number, wants to display blank. pretty sure i need a better solution.
+    parents2_income_support_precent = 0
+  else:
+     if parents2_available_income_amount == 0:
+       parents2_income_support_precent = .1
+     else:
+       parents2_income_support_precent = parents2_other_adjusted_support_share / parents2_available_income_amount
+  set_parents2_income_support_precent = True
+---
 #sets parents1_other_limited_adjusted_amount, 6e, Parent A
+#math from worksheet line
 depends on:
   - parents1_income_support_precent
   - parents2_income_share_percent
   - parents1_other_adjusted_support_share
 code: |
-  if parents1_income_support_precent == "N/A":
-    parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share
+  if parents1_income_support_precent == 0:
+    parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share    
   elif parents1_income_support_precent >= 10:
+  #CAN I DO A ELIF (VARIABLE) IS IN SOME RANGE? IE. 2-10
     parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share
   else:
-    if parents1_other_adjusted_support_share <= ((parents1_income_support_precent + (parents1_income_support_precent * .1)) * parents2_income_share_percent):
+    if parents1_other_adjusted_support_share <= ((parents1_income_support_precent + (parents1_income_support_precent * .1)) * parents2_available_income_amount):
       parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share
     else:
-      parents1_other_limited_adjusted_amount = ((parents1_income_support_precent + (parents1_income_support_precent * .1)) * parents2_income_share_percent)
+      parents1_other_limited_adjusted_amount = ((parents1_income_support_precent + (parents1_income_support_precent * .1)) * parents2_available_income_amount)
   calculate_parents1_other_limited_adjusted_amount = True  
 ---
 #sets parents2_other_limited_adjusted_amount, 6e, Parent B
+#math from worksheet line
+depends on:
+  - parents2_income_support_precent
+  - parents2_other_adjusted_support_share
+  - parents1_available_income_amount
+code: |
+  if parents2_income_support_precent == 0:
+    parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share    
+  elif parents2_income_support_precent >= 10:
+  #CAN I DO A ELIF (VARIABLE) IS IN SOME RANGE? IE. 2-10
+    parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share
+  else:
+    if parents2_other_adjusted_support_share <= ((parents2_income_support_precent + (parents2_income_support_precent * .1)) * parents1_available_income_amount):
+      parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share
+    else:
+      parents2_other_limited_adjusted_amount = ((parents2_income_support_precent + (parents2_income_support_precent * .1)) * parents1_available_income_amount)
+  calculate_parents2_other_limited_adjusted_amount = True  
+---
+#this code defines both Payor and Recipient statuses
+#will refrence only recipient_payor variable for logic about payor's owed amounts
+#if recipient_payor == 'Recipient' (assumes P1 recipient) else: (assumes P2 recipient)
+depends on:
+  - parenting_arangment
+  - parents2_other_limited_adjusted_amount
+  - parents1_other_limited_adjusted_amount
+code: |
+  if parenting_arangment == "two-thirds":
+    # parent1 is recipient values and parent2 is payor values
+    recipient_payor = "Recipient"
+    payor_recipient = "Payor"
+  else:
+    if parents2_other_limited_adjusted_amount < parents1_other_limited_adjusted_amount:
+      # parent1 is recipient values and parent2 is payor values
+      recipient_payor = "Recipient"
+      payor_recipient = "Payor"
+    else:
+      # parent2 is recipient values and parent1 is payor values
+      recipient_payor = "Payor"
+      payor_recipient = "Recipient"
+  set_recipient_payor_statuses = True
+---
+#sets recipients_support_income_percent, 7a
+#math from worksheet
+depends on:
+ - parenting_arangment
+ - payors_adjusted_share_amount
+ - parents1_available_income_amount
+code: |
+  if parenting_arangment == 'two-thirds':
+    if parents1_available_income_amount == 0:
+      recipients_support_income_percent = "N/A"
+    else:
+      recipients_support_income_percent = payors_adjusted_share_amount / parents1_available_income_amount
+  else:
+    recipients_support_income_percent = 'N/A'
+  set_recipients_support_income_percent = True
+---
+#sets payors_disparity_adjusted_amount, 7b
+#math from worksheet
+#If 7a is ≥ 10% or is N/A, enter 6g
+#If 7a is < 10%, enter 6e, 6g, or ((7a + 10%) x Payor 3a), whichever is less,
+#but not less than an amount from the shaded area of the Guidelines Chart
+depends on:
+  - 7a
+  - 6e
+  - 6g
+  - payor 3a
+code: |
+  if recipients_support_income_percent == 'N/A':
+    payors_disparity_adjusted_amount = payors_adjusted_share_amount
+  #if recipients_support_income_percent =< .1:  
+  else:
+    payors_disparity_adjusted_amount = payors_adjusted_share_amount
+  set_payors_disparity_adjusted_amount = True
 
- 
 ---
 #sets combined_additional_income_amount, 8a
 depends on:
@@ -1373,12 +1482,9 @@ code: |
   parents2_other_low_income_adjusted = DAEmpty()
   parents1_other_adjusted_support_share = (parents1_income_share_percent * parents2_benchmark_amount) + parents2_other_low_income_adjusted
   parents2_other_adjusted_support_share = (parents2_income_share_percent * parents1_benchmark_amount) + parents1_other_low_income_adjusted
-  parents2_income_support_precent = DAEmpty()
-  parents2_other_limited_adjusted_amount = DAEmpty()
-  recipient_payor = DAEmpty()
-  payors_adjusted_share_amount = DAEmpty()
-  recipients_support_income_percent = DAEmpty()
-  payors_disparity_adjusted_amount = DAEmpty()
+  #payors_adjusted_share_amount is a temp number. Complicated logic to set value. 
+  payors_adjusted_share_amount = 250
+  #payors_disparity_adjusted_amount = DAEmpty()
   payors_SS_credit_amount = DAEmpty()
   payors_obligations_amount = DAEmpty()
   obligations_hardship_yes = DAEmpty()
@@ -1387,6 +1493,7 @@ code: |
   parents2_additional_income_amount = DAEmpty()
   parents1_other_benchmark_share_amount = DAEmpty()
   parents2_other_benchmark_share_amount = DAEmpty()
+  #temp
 ---
 objects:
   - child_support_guidelines_worksheet_post_interview_instructions: ALDocument.using(title="Instructions", filename="child_support_guidelines_worksheet_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
@@ -1519,42 +1626,22 @@ attachments:
           % if two_thirds_yes == True:
           N/A
           % else:
-            % if parents2_available_income_amount == 0:
-            100%
-            % elif parents2_available_income_amount >= .1:
-            ${ parents1_other_adjusted_support_share / parents1_available_income_amount } %
-            % endif
+          ${ round(parents2_income_support_precent * 100) } %
           % endif
       - "parents2_other_limited_adjusted_amount": ${ currency(round(parents2_other_limited_adjusted_amount)) }  
       - "parents1_other_limited_adjusted_amount": ${ currency(round(parents1_other_limited_adjusted_amount)) }
-      - "recipient_payor": |
-          % if parenting_arangment == "two-thirds":
-          Recipient         
-          % else:
-            % if parents2_other_limited_adjusted_amount < parents1_other_limited_adjusted_amount:
-            Recipient
-            % endif
-          % endif
-      - "payor_recipient": |       
-          % if two_thirds_yes == True:
-          Payor
-          % elif two_thirds_yes == False:
-            % if parents1_other_limited_adjusted_amount < parents2_other_limited_adjusted_amount:
-           Recipient
-            % elif parents1_other_limited_adjusted_amount > parents2_other_limited_adjusted_amount:
-            Payor
-            % endif
-          % endif
-      - "payors_adjusted_share_amount": ${ payors_adjusted_share_amount } 
+      - "recipient_payor": ${ recipient_payor } 
+      - "payor_recipient": ${ payor_recipient }
+      - "payors_adjusted_share_amount": ${ currency(payors_adjusted_share_amount) } 
       - "mass_gov_yes": ${ mass_gov_yes }
-      - "recipients_support_income_percent": ${ recipients_support_income_percent }
-      - "payors_disparity_adjusted_amount": ${ payors_disparity_adjusted_amount }
+      - "recipients_support_income_percent": ${ round(recipients_support_income_percent * 100) } %
+      - "payors_disparity_adjusted_amount": ${ currency(round(payors_disparity_adjusted_amount)) }
       - "payors_SS_credit_amount": ${ payors_SS_credit_amount }
       - "payors_obligations_amount": |
           % if payors_disparity_adjusted_amount > payors_SS_credit_amount:
-          ${ payors_obligations_amount } = ${ payors_disparity_adjusted_amount - payors_SS_credit_amount }
+          ${ currency(payors_obligations_amount = payors_disparity_adjusted_amount - payors_SS_credit_amount) }
           % elif payors_disparity_adjusted_amount <= payors_SS_credit_amount:
-          ${ payors_obligations_amount } = $0
+          ${ currency(0) }
           % endif
       - "obligations_hardship_yes": ${ obligations_hardship_yes }
       - "payors_support_income_percent_amount": ${ payors_support_income_percent_amount }
