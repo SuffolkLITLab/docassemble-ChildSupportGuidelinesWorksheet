@@ -117,6 +117,7 @@ code: |
   set_recipients_support_income_percent
   set_payors_disparity_adjusted_amount
   mass_gov_yes
+  set_payors_SS_credit_amount
   interview_order_child_support_guidelines_worksheet = True
 ---
 ###################### Main order ######################
@@ -1445,12 +1446,22 @@ depends on:
   - payor 3a
 code: |
   if recipients_support_income_percent == 'N/A':
-    payors_disparity_adjusted_amount = payors_adjusted_share_amount
-  #if recipients_support_income_percent =< .1:  
+    payors_disparity_adjusted_amount = payors_adjusted_share_amount  
   else:
     payors_disparity_adjusted_amount = payors_adjusted_share_amount
   set_payors_disparity_adjusted_amount = True
-
+---
+#sets payors_SS_credit_amount, 7c
+depends on:
+  - recipient_payor
+  - parents1_SS_dependency_recievied_amount
+  - parents2_SS_dependency_recievied_amount
+code: |
+  if recipient_payor == 'Recipient':
+    payors_SS_credit_amount = parents1_SS_dependency_recievied_amount
+  else:
+    payors_SS_credit_amount = parents2_SS_dependency_recievied_amount
+  set_payors_SS_credit_amount = True 
 ---
 #sets combined_additional_income_amount, 8a
 depends on:
@@ -1486,7 +1497,6 @@ code: |
   #payors_adjusted_share_amount is a temp number. Complicated logic to set value. 
   payors_adjusted_share_amount = 250
   #payors_disparity_adjusted_amount = DAEmpty()
-  payors_SS_credit_amount = DAEmpty()
   payors_obligations_amount = DAEmpty()
   obligations_hardship_yes = DAEmpty()
   payors_support_income_percent_amount = DAEmpty()
@@ -1637,7 +1647,7 @@ attachments:
       - "mass_gov_yes": ${ mass_gov_yes }
       - "recipients_support_income_percent": ${ round(recipients_support_income_percent * 100) } %
       - "payors_disparity_adjusted_amount": ${ currency(round(payors_disparity_adjusted_amount)) }
-      - "payors_SS_credit_amount": ${ payors_SS_credit_amount }
+      - "payors_SS_credit_amount": ${ currency(payors_SS_credit_amount) }
       - "payors_obligations_amount": |
           % if payors_disparity_adjusted_amount > payors_SS_credit_amount:
           ${ currency(payors_obligations_amount = payors_disparity_adjusted_amount - payors_SS_credit_amount) }
