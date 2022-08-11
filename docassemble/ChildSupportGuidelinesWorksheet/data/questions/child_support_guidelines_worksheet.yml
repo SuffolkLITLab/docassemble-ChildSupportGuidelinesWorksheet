@@ -76,8 +76,8 @@ code: |
   set_parenting_arangment
   set_progress(14)
   set_parents2_under_18_number
-  parents1_under_18_number
   set_both_over_18_number
+  parents1_under_18_number
   parents1_name_full
   parents1_gross_amount
   parents2_gross_amount
@@ -118,6 +118,8 @@ code: |
   set_payors_disparity_adjusted_amount
   mass_gov_yes
   set_payors_SS_credit_amount
+  set_payors_obligations_amount
+  set_payors_support_income_percent_amount
   interview_order_child_support_guidelines_worksheet = True
 ---
 ###################### Main order ######################
@@ -175,15 +177,25 @@ fields:
     hint: |
       e.g. SU15D004CS
     help: |
-      The docket number should be a 11 digit string of numbers and letters.
+      The docket number should be a 11 digit string of numbers and letters. Write "Unknown" if unknown.
 ---
-id: Parenting Arangment Page
+id: Children ages
 question: |
-  What parenting arangment is closest to yours?
+  What are the ages of the children for this order?
 fields:
   - "Total number of children?": children_number    
     datatype: number    
     help: Input what you think the total number of children that are eligible for support payments under this order.
+  - "Are there children involved that are over 18 years old?": any_children_over_18
+    datatype: yesnoradio
+  - "How many children are over 18 years old?": children_over_18_number
+    datatype: number
+    show if: any_children_over_18
+---
+id: Parenting arangment
+question: |
+  What parenting arangment below is most similar to yours?
+fields:
   - Choose: parenting_arangment
     input type: radio
     choices:
@@ -226,13 +238,21 @@ fields:
   - "What is the other parents name?": parents2_name_full
     maxlength: 29 
 ---
-# sets parents2 children to 0 when needed.
 depends on:
   - parenting_arangment
 code: |
   if parenting_arangment == "two-thirds":
     parents2_under_18_number = 0
   set_parents2_under_18_number = True
+---
+# sets over_18 values if none
+depends on:
+  - any_children_over_18 
+code: |
+  if any_children_over_18 == False:
+    parents1_over_18_number = 0
+    parents2_over_18_number = 0
+  set_both_over_18_number = True
 ---
 id: What are the ages of the children this order concerns?
 question: |
@@ -250,8 +270,10 @@ fields:
     datatype: number    
   - "How many of ${ parents2_name_full }'s children are under 18 years old?": parents2_under_18_number
     datatype: number
-  - "Are there children involved that are over 18 years old?": any_children_over_18
-    datatype: yesnoradio
+  - "How many of ${ parents1_name_full }'s children are over 18 years old?": parents1_over_18_number
+    datatype: number        
+  - "How many of ${ parents2_name_full }'s children are over 18 years old?": parents2_over_18_number
+    datatype: number 
   - note: |
       The judge will look at the following reasons for including these children in the order:
      
@@ -261,21 +283,6 @@ fields:
       * All kinds of resources the parents may have, like a bedroom for the child or the ability to help with school work; and
       * Each parent’s contribution to post-secondary education costs for the child or other children in the family.
     show if: any_children_over_18 
-  - "How many of ${ parents1_name_full }'s children are over 18 years old?": parents1_over_18_number
-    datatype: number
-    show if: any_children_over_18        
-  - "How many of ${ parents2_name_full }'s children are over 18 years old?": parents2_over_18_number
-    datatype: number
-    show if: any_children_over_18     
----
-# sets over_18 values if none
-depends on:
-  - any_children_over_18 
-code: |
-  if any_children_over_18 == False:
-    parents1_over_18_number = 0
-    parents2_over_18_number = 0
-  set_both_over_18_number = True
 ---
 # hashed out lines are accesibility improvments. Should ask if they get SS before asking about figures
 id: What does Parents 1 income situation look like
@@ -1324,37 +1331,29 @@ code: |
   parents2_benchmark_amount = sum(children_amounts)
 ---
 #sets parents1_income_support_percent, 6d, Parent A
+#math from MLRI Guidlines
 #two_thirds_yes == True wants to have N/A display
 depends on:
-  - two_thirds_yes
   - parents1_available_income_amount
   - parents1_other_adjusted_support_share
 code: |
-  if two_thirds_yes == True:
-    # set to 0 for since i need a number, wants to display N/A. pretty sure i need a better solution.
-    parents1_income_support_percent = 0
+  if parents1_available_income_amount == 0:
+    parents1_income_support_percent = .1
   else:
-     if parents1_available_income_amount == 0:
-       parents1_income_support_percent = .1
-     else:
-       parents1_income_support_percent = parents1_other_adjusted_support_share / parents1_available_income_amount
+    parents1_income_support_percent = parents1_other_adjusted_support_share / parents1_available_income_amount
   set_parents1_income_support_percent = True
 ---
 #sets parents2_income_support_percent, 6d, Parent B
-#math from MLRI Guidlines 
+#math from MLRI Guidlines
+#two_thirds_yes == True wants to have N/A display - used in attachment block
 depends on:
-  - two_thirds_yes
   - parents2_available_income
   - parents2_other_adjusted_support_share
 code: |
-  if two_thirds_yes == True:
-    # set to 0 for since i need a number, wants to display blank. pretty sure i need a better solution.
-    parents2_income_support_percent = 0
+  if parents2_available_income_amount == 0:
+    parents2_income_support_percent = .1
   else:
-     if parents2_available_income_amount == 0:
-       parents2_income_support_percent = .1
-     else:
-       parents2_income_support_percent = parents2_other_adjusted_support_share / parents2_available_income_amount
+    parents2_income_support_percent = parents2_other_adjusted_support_share / parents2_available_income_amount
   set_parents2_income_support_percent = True
 ---
 #sets parents1_other_limited_adjusted_amount, 6e, Parent A
@@ -1378,6 +1377,7 @@ code: |
 ---
 #sets parents2_other_limited_adjusted_amount, 6e, Parent B
 #math from worksheet line
+#will require validation that numbers do not go below shaded guidlines area'
 depends on:
   - parents2_income_support_percent
   - parents2_other_adjusted_support_share
@@ -1447,8 +1447,15 @@ depends on:
 code: |
   if recipients_support_income_percent == 'N/A':
     payors_disparity_adjusted_amount = payors_adjusted_share_amount  
-  else:
-    payors_disparity_adjusted_amount = payors_adjusted_share_amount
+  elif recipients_support_income_percent >= .1:
+    payors_disparity_adjusted_amount = payors_adjusted_share_amount  
+  elif recipients_support_income_percent < .1:
+    if parenting_arangment == 'two-thirds':
+      #parents1 recipient and parents2 payor
+      payors_disparity_adjusted_amount = payors_adjusted_share_amount
+    else:
+      #parents2 recipient and parents2 payor
+      payors_disparity_adjusted_amount = payors_adjusted_share_amount  
   set_payors_disparity_adjusted_amount = True
 ---
 #sets payors_SS_credit_amount, 7c
@@ -1462,6 +1469,44 @@ code: |
   else:
     payors_SS_credit_amount = parents2_SS_dependency_recievied_amount
   set_payors_SS_credit_amount = True 
+---
+#sets payors_obligations_amount, 7d
+depends on:
+  - payors_SS_credit_amount
+  - payors_disparity_adjusted_amount
+code: |
+  payors_obligations_amount = 250
+  set_payors_obligations_amount = True
+---
+# sets payors_support_income_percent_amount, 7e
+depends on:
+  - recipient_payor
+  - parents1_available_income_amount
+  - parents2_available_income_amount
+  - payors_obligations_amount
+code: |
+  if recipient_payor == "Recipient":
+    #parent1 are recipient values and parent2 is payor values
+    if parents1_available_income_amount == 0:
+      payors_support_income_percent_amount = 1
+    else:
+      payors_support_income_percent_amount = payors_obligations_amount / parents1_available_income_amount
+  else:
+    #parent2 are recipient values and parent1 is payor values
+    if parents2_available_income_amount == 0:
+      payors_support_income_percent_amount = 1
+    else:
+      payors_support_income_percent_amount = payors_obligations_amount / parents2_available_income_amount
+  set_payors_support_income_percent_amount = True
+---
+#sets obligations_hardship_yes, checkbox at 7e
+depends on:
+  - payors_support_income_percent_amount
+code: |
+  if payors_support_income_percent_amount >= .4:
+    obligations_hardship_yes = True
+  else:
+    obligations_hardship_yes = False
 ---
 #sets combined_additional_income_amount, 8a
 depends on:
@@ -1494,17 +1539,12 @@ code: |
   parents2_other_low_income_adjusted = DAEmpty()
   parents1_other_adjusted_support_share = (parents1_income_share_percent * parents2_benchmark_amount) + parents2_other_low_income_adjusted
   parents2_other_adjusted_support_share = (parents2_income_share_percent * parents1_benchmark_amount) + parents1_other_low_income_adjusted
-  #payors_adjusted_share_amount is a temp number. Complicated logic to set value. 
+  #payors_adjusted_share_amount has a temp number. Complicated logic to set value. 
   payors_adjusted_share_amount = 250
-  #payors_disparity_adjusted_amount = DAEmpty()
-  payors_obligations_amount = DAEmpty()
-  obligations_hardship_yes = DAEmpty()
-  payors_support_income_percent_amount = DAEmpty()
   parents1_additional_income_amount = DAEmpty()
   parents2_additional_income_amount = DAEmpty()
   parents1_other_benchmark_share_amount = DAEmpty()
   parents2_other_benchmark_share_amount = DAEmpty()
-  #temp
 ---
 objects:
   - child_support_guidelines_worksheet_post_interview_instructions: ALDocument.using(title="Instructions", filename="child_support_guidelines_worksheet_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
@@ -1599,10 +1639,10 @@ attachments:
       - "parents1_child_number_adjustments": ${ parents1_child_number_adjustments }
       - "parents2_support_amount": ${ currency(one_child_support_amount * parents2_child_number_adjustments) }
       - "parents1_support_amount": ${ currency(one_child_support_amount * parents1_child_number_adjustments) }
-      - "parents1_children_adjustments": ${ parents1_children_adjustments }
-      - "parents2_children_adjustments": ${ parents2_children_adjustments }
-      - "parents1_over_18_adjustments_amount": ${ parents1_support_amount * parents1_children_adjustments }
-      - "parents2_over_18_adjustments_amount": ${ parents2_support_amount * parents2_children_adjustments }
+      - "parents1_children_adjustments": ${ round(parents1_children_adjustments * 100) } %
+      - "parents2_children_adjustments": ${ round(parents2_children_adjustments * 100) } %
+      - "parents1_over_18_adjustments_amount": ${ currency(round(parents1_support_amount * parents1_children_adjustments)) }
+      - "parents2_over_18_adjustments_amount": ${ currency(round(parents2_support_amount * parents2_children_adjustments)) }
       - "parents1_adjusted_support_amount": ${ currency(round(parents1_support_amount - parents1_over_18_adjustments_amount)) }
       - "parents2_adjusted_support_amount": ${ currency(round(parents2_support_amount - parents2_over_18_adjustments_amount)) }
       - "parents1_share_support_amount":  ${ currency(round(parents1_share_support_amount)) }
@@ -1648,14 +1688,9 @@ attachments:
       - "recipients_support_income_percent": ${ round(recipients_support_income_percent * 100) } %
       - "payors_disparity_adjusted_amount": ${ currency(round(payors_disparity_adjusted_amount)) }
       - "payors_SS_credit_amount": ${ currency(payors_SS_credit_amount) }
-      - "payors_obligations_amount": |
-          % if payors_disparity_adjusted_amount > payors_SS_credit_amount:
-          ${ currency(payors_obligations_amount = payors_disparity_adjusted_amount - payors_SS_credit_amount) }
-          % elif payors_disparity_adjusted_amount <= payors_SS_credit_amount:
-          ${ currency(0) }
-          % endif
+      - "payors_obligations_amount": ${ currency(payors_obligations_amount) }        
       - "obligations_hardship_yes": ${ obligations_hardship_yes }
-      - "payors_support_income_percent_amount": ${ payors_support_income_percent_amount }
+      - "payors_support_income_percent_amount": ${ round(payors_support_income_percent_amount * 100) } %
       - "combined_additional_income_amount": ${ currency(combined_additional_income_amount) }
       - "parents1_additional_income_amount": ${ combined_additional_income_amount * round(parents1_available_income_amount / combined_available_income_amount) } %
       - "parents2_additional_income_amount": ${ combined_additional_income_amount * round(parents2_available_income_amount / combined_available_income_amount) } %
