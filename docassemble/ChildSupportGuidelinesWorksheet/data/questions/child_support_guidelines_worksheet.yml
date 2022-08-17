@@ -1525,7 +1525,7 @@ code: |
   if combined_available_income_amount - 7692 > 0:
     combined_additional_income_amount = combined_available_income_amount - 7692
   else:
-    0
+    combined_additional_income_amount = 0
   set_combined_additional_income_amount = True
 ---
 code: |
