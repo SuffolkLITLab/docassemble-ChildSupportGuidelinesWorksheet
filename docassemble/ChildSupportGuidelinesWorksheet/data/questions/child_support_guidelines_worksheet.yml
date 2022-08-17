@@ -75,8 +75,9 @@ code: |
   children_number
   set_parenting_arangment
   set_progress(14)
-  set_parents2_under_18_number
-  set_both_over_18_number
+  set_children_over_18_number
+  set_parents1_children
+  set_parents2_children
   parents1_under_18_number
   parents1_name_full
   parents1_gross_amount
@@ -192,6 +193,16 @@ fields:
     datatype: number
     show if: any_children_over_18
 ---
+# sets over_18 values if none
+depends on:
+  - any_children_over_18 
+code: |
+  if any_children_over_18 == False:
+    children_over_18_number = 0
+    parents1_over_18_number = 0
+    parents2_over_18_number = 0
+  set_children_over_18_number = True
+---
 id: Parenting arangment
 question: |
   What parenting arangment below is most similar to yours?
@@ -238,51 +249,50 @@ fields:
   - "What is the other parents name?": parents2_name_full
     maxlength: 29 
 ---
+# sets parents2 children values
 depends on:
   - parenting_arangment
 code: |
   if parenting_arangment == "two-thirds":
     parents2_under_18_number = 0
-  set_parents2_under_18_number = True
----
-# sets over_18 values if none
-depends on:
-  - any_children_over_18 
-code: |
-  if any_children_over_18 == False:
-    parents1_over_18_number = 0
     parents2_over_18_number = 0
-  set_both_over_18_number = True
+  elif parenting_arangment == "shared":
+    parents2_under_18_number = children_number - children_over_18_number
+    parents2_over_18_number = children_over_18_number
+  set_parents2_children = True
 ---
-id: What are the ages of the children this order concerns?
+# sets parents1 children values 
+depends on:
+  - parenting_arangment
+  - children_number
+  - children_over_18_number
+code: |
+  if parenting_arangment == "two-thirds":
+    parents1_under_18_number = children_number - children_over_18_number   
+    parents1_over_18_number = children_over_18_number
+  elif parenting_arangment == "shared":
+    parents1_under_18_number = children_number - children_over_18_number   
+    parents1_over_18_number = children_over_18_number
+  set_parents1_children = True
+---
+id: Child domicile assigning
 question: |
   What is the number and the age's of the children for whom each parent may be eligible to receive support?
 subquestion: |
   As a **reminder** you said the parenting arangment was **${ parenting_arangment }**.
-
-  If the parenting arangment is **shared**, put **${ children_number }** each parents box.
-       
-  If the parenting arangment is **two-thirds**, and the children are with ${ parents1_name_full } more than **two-third's** of the time put **${ children_number }** in ${ parents1_name_full }'s box and keep **0** in ${ parents2_name_full }'s box.
       
   If the parenting arangment is **split**, meaning some children live with each parent, put the number of children living with each parent in the respective fields. 
 fields:
-  - "How many of ${ parents1_name_full }'s children are under 18 years old?": parents1_under_18_number
+  - "How many of the children that live with ${ parents1_name_full } are under 18 years old?": parents1_under_18_number
     datatype: number    
-  - "How many of ${ parents2_name_full }'s children are under 18 years old?": parents2_under_18_number
+  - "How many of the children that live with ${ parents2_name_full } are under 18 years old?": parents2_under_18_number
     datatype: number
-  - "How many of ${ parents1_name_full }'s children are over 18 years old?": parents1_over_18_number
-    datatype: number        
-  - "How many of ${ parents2_name_full }'s children are over 18 years old?": parents2_over_18_number
-    datatype: number 
-  - note: |
-      The judge will look at the following reasons for including these children in the order:
-     
-      * Your child’s living situation, like why your child lives with you, and when and how much time they live with you;
-      * Why your child is mainly dependent on you;
-      * Your child’s academic situation, like their progress in school, or if they are part-time of full-time;
-      * All kinds of resources the parents may have, like a bedroom for the child or the ability to help with school work; and
-      * Each parent’s contribution to post-secondary education costs for the child or other children in the family.
-    show if: any_children_over_18 
+  - "How many of children that live with ${ parents1_name_full } are over 18 years old?": parents1_over_18_number
+    datatype: number
+    show if: any_children_over_18
+  - "How many of children that live with ${ parents2_name_full } are over 18 years old?": parents2_over_18_number
+    datatype: number
+    show if: any_children_over_18
 ---
 # hashed out lines are accesibility improvments. Should ask if they get SS before asking about figures
 id: What does Parents 1 income situation look like
