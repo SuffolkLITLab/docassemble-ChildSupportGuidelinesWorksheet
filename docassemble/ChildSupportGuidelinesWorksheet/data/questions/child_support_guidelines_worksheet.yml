@@ -146,22 +146,22 @@ comment: |
 id: Child_Support_Guidelines_Worksheet
 continue button field: child_support_guidelines_worksheet_intro
 question: |
-  Child Support Guidelines Worksheet
+  Child Support Worksheet
 subquestion: |
   This guided interview will help you determine how much child support will be owed.  
   
   To complete the interview you need to have income and expense information for **both parents**. Use the other parent’s Financial Statement if you have it. If you do not know the other parent’s information, put in what you think it is.  
   
-  This interview is intended to make the [Child Support Worksheet](https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021) a simpiler and less time consuming process to complete. It is based on the [Massachusetts Child Support Guidlines for 2021](https://www.mass.gov/doc/2021-child-support-guidelines/download).
+  This interview is intended to make the [Child Support Worksheet](https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021) a simpler and less time consuming process to complete. It is based on the [Massachusetts Child Support Guidlines for 2021](https://www.mass.gov/doc/2021-child-support-guidelines/download).
 ---
 id: Preparer information
 question: |
-  Preparer Information
-subquestion: |
   Please give the full name of who is filling out this worksheet, and what todays date is.
 fields:
   - "Who is filling out this worksheet?": preparer_name_full
     maxlength: 28
+    hint: |
+      e.g. Jane Doe
   - "What date is this worksheet being prepared on?": prepared_date
     datatype: date
     default: |
@@ -174,7 +174,7 @@ fields:
   - "What is the name of the case?": case_name
     maxlength: 29
     hint: |
-      Jane Doe v. John Smith
+      e.g. Jane Doe v. John Smith
   - "Please provide the docket number for the case.": docket_number
     maxlength: 29
     hint: |
@@ -209,13 +209,19 @@ id: Parenting arangment
 question: |
   What parenting arangment below is most similar to yours?
 fields:
-  - Choose: parenting_arangment
+  - Choose one: parenting_arangment
     input type: radio
     choices:
-      - Box 1 Parenting and financial responsibilties are **shared** mostly equally.: shared
-      - Box 2 The children live with one parent about **two-thirds** of the time.: two-thirds
-      - Box 3 The children are **split** between the parents, and each parent has primary custody of atleast one child.: split      
-  - "You picked **Box 2**. What is the name of the parent that usually has the kids?": parents1_name_full
+      - Parenting time and financial responsibilties are **shared** mostly equally.: shared      
+      - All of the children live with one parent about **two-thirds** of the time.: two-thirds
+      - The children are **split** between the parents. Each parent has primary custody of atleast one child.: split      
+#  - "Need more explanation of **parenting arangment**?": explain_arangment_yesno
+#    datatype: yesnoradio
+#  - note: |
+#      * **Shared** is when both parenting time and financial responsibilities for the children are mostly equal. This means that the kids will stay with each parent half the time, and the costs assocaited with raising the kids are split equally.
+#      * **Two-thirds**
+#      * **Split**
+  - "You picked **two-thirds**. What is the name of the parent that usually has the kids?": parents1_name_full
     show if: 
       variable: parenting_arangment
       is: two-thirds
