@@ -73,7 +73,7 @@ code: |
   prepared_date
   case_name
   children_number
-  set_parenting_arangment
+  set_parenting_arrangement
   set_progress(14)
   set_children_over_18_number
   set_parents1_children
@@ -148,7 +148,7 @@ continue button field: child_support_guidelines_worksheet_intro
 question: |
   Child Support Worksheet
 subquestion: |
-  This guided interview will help you determine how much child support will be owed.  
+  This guided interview will help you complete the [Child Support Worksheet](https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021) and determine how much child support will be owed. 
   
   To complete the interview you need to have income and expense information for **both parents**. Use the other parent’s Financial Statement if you have it. If you do not know the other parent’s information, put in what you think it is.  
   
@@ -186,12 +186,12 @@ id: Children ages
 question: |
   What are the ages of the children for this order?
 fields:
-  - "Total number of children?": children_number    
+  - "Number of children who may be eligible to be covered by this order.": children_number    
     datatype: number    
     help: Input what you think the total number of children that are eligible for support payments under this order.
-  - "Are there children involved that are over 18 years old?": any_children_over_18
+  - "Are any of the children covered by this order are between 18 and 23 years old?": any_children_over_18
     datatype: yesnoradio
-  - "How many children are over 18 years old?": children_over_18_number
+  - "How many of the children are between 18 and 23 years old?": children_over_18_number
     datatype: number
     show if: any_children_over_18
 ---
@@ -205,80 +205,80 @@ code: |
     parents2_over_18_number = 0
   set_children_over_18_number = True
 ---
-id: Parenting arangment
+id: Parenting arrangement
 question: |
-  What parenting arangment below is most similar to yours?
+  What parenting arrangement below is most similar to yours?
 fields:
-  - Choose one: parenting_arangment
+  - Choose one: parenting_arrangement
     input type: radio
     choices:
-      - Parenting time and financial responsibilties are **shared** mostly equally.: shared      
+      - Parenting time and financial responsibilities are **shared** mostly equally.: shared      
       - All of the children live with one parent about **two-thirds** of the time.: two-thirds
-      - The children are **split** between the parents. Each parent has primary custody of atleast one child.: split      
-#  - "Need more explanation of **parenting arangment**?": explain_arangment_yesno
+      - The children are **split** between the parents. Each parent has primary custody of at least one child.: split      
+#  - "Need more explanation of **parenting arrangement**?": explain_arangment_yesno
 #    datatype: yesnoradio
 #  - note: |
 #      * **Shared** is when both parenting time and financial responsibilities for the children are mostly equal. This means that the kids will stay with each parent half the time, and the costs assocaited with raising the kids are split equally.
 #      * **Two-thirds**
 #      * **Split**
-  - "You picked **two-thirds**. What is the name of the parent that usually has the kids?": parents1_name_full
+  - "What is the name of the parent that has the children approximately **two-thirds** of the time?": parents1_name_full
     show if: 
-      variable: parenting_arangment
+      variable: parenting_arrangement
       is: two-thirds
   - "What is the name of the other parent in this order?": parents2_name_full
     show if: 
-      variable: parenting_arangment
+      variable: parenting_arrangement
       is: two-thirds
 ---
-id: sets parenting_arangment
+id: sets parenting_arrangement
 depends on:
-  - parenting_arangment
+  - parenting_arrangement
 code: |
-  if parenting_arangment == 'shared':
+  if parenting_arrangement == 'shared':
     shared_equal_yes = True
     two_thirds_yes = False
     split_children_yes = False
-  elif parenting_arangment == 'two-thirds':
+  elif parenting_arrangement == 'two-thirds':
     shared_equal_yes = False
     two_thirds_yes = True
     split_children_yes = False
-  elif parenting_arangment == 'split':
+  elif parenting_arrangement == 'split':
     shared_equal_yes = False
     two_thirds_yes = False
     split_children_yes = True
-  set_parenting_arangment = True 
+  set_parenting_arrangement = True 
 ---
 id: parents names?
 question: |
   What are the names of the parents involved in this order?   
 fields:    
-  - "What is one of the parents name?": parents1_name_full
+  - "What is one of the parent's name?": parents1_name_full
     maxlength: 29
-  - "What is the other parents name?": parents2_name_full
+  - "What is the other parent's name?": parents2_name_full
     maxlength: 29 
 ---
 # sets parents2 children values
 depends on:
-  - parenting_arangment
+  - parenting_arrangement
 code: |
-  if parenting_arangment == "two-thirds":
+  if parenting_arrangement == "two-thirds":
     parents2_under_18_number = 0
     parents2_over_18_number = 0
-  elif parenting_arangment == "shared":
+  elif parenting_arrangement == "shared":
     parents2_under_18_number = children_number - children_over_18_number
     parents2_over_18_number = children_over_18_number
   set_parents2_children = True
 ---
 # sets parents1 children values 
 depends on:
-  - parenting_arangment
+  - parenting_arrangement
   - children_number
   - children_over_18_number
 code: |
-  if parenting_arangment == "two-thirds":
+  if parenting_arrangement == "two-thirds":
     parents1_under_18_number = children_number - children_over_18_number   
     parents1_over_18_number = children_over_18_number
-  elif parenting_arangment == "shared":
+  elif parenting_arrangement == "shared":
     parents1_under_18_number = children_number - children_over_18_number   
     parents1_over_18_number = children_over_18_number
   set_parents1_children = True
@@ -380,17 +380,17 @@ question: |
 subquestion: |
   Other Obligations, Health Insurance, Dental/Vision Insurance
 fields:  
-  - "How much does ${ parents1_name_full } pay for health insurance enrollment?": parents1_health_care_amount
+  - "Put the weekly amount that ${ parents1_name_full } actually pays for individual or family health care coverage?": parents1_health_care_amount
     datatype: currency
     min: 0
     help: |
      In this field, put the cost of individual or family health care coverage. Put the weekly amount each parent actually pays for individual or family health care coverage.
-  - "How much does ${ parents1_name_full } pay for dental and vision insurance?": parents1_dental_vision_amount
+  - "Put the weekly amount ${ parents1_name_full } actually pays for dental and/or vision insurance **for the children**.": parents1_dental_vision_amount
     datatype: currency
     min: 0
     help : |
       In this field, put the cost of dental and vision insurance for the children. Put the weekly amount each parent actually pays for dental and vision insurance.
-  - "How much does ${ parents1_name_full } pay in support for other obligations:": parents1_other_obligations_amount
+  - "Put the weekly amount ${ parents1_name_full } pays in existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case:": parents1_other_obligations_amount
     datatype: currency
     min: 0 
     help: |
@@ -1171,9 +1171,9 @@ code: |
 depends on: 
  - parents2_income_share_percent
  - parents2_adjusted_support_amount
- - parenting_arangment
+ - parenting_arrangement
 code: |
- if parenting_arangment == "two-thirds":
+ if parenting_arrangement == "two-thirds":
    parents2_share_support_amount = 1
  else:
    parents2_share_support_amount = round(parents2_adjusted_support_amount * parents2_income_share_percent)
@@ -1193,7 +1193,7 @@ depends on:
  - parents2_share_support_amount
  - parents2_adjusted_support_amount
 code: |
-  if parenting_arangment == 'two-thirds':
+  if parenting_arrangement == 'two-thirds':
     parents2_other_share_support = 1
   else:
     parents2_other_share_support = parents2_share_support_amount - parents2_adjusted_support_amount
@@ -1202,11 +1202,11 @@ code: |
 #setting parents1_other_low_income_adjusted, 5c, Parent A
 #Logic and math are coming from shaded area of table A, not Child Support Guidlines Chart.
 depends on:
-  - parenting_arangment
+  - parenting_arrangement
   - parents2_available_income_amount
   - parents1_other_share_support
 code: |
-  if parenting_arangment == "two-thirds":
+  if parenting_arrangement == "two-thirds":
     if parents2_available_income_amount > 249:
       parents1_other_low_income_adjusted = parents1_other_share_support
     else:
@@ -1236,11 +1236,11 @@ code: |
 #sets parents2_other_low_income_adjusted, 5c, Parent B
 #Logic and math are coming from shaded area of table A, not Child Support Guidlines Chart.
 depends on: 
-  - parenting_arangment
+  - parenting_arrangement
   - parents2_other_share_support
   - parents1_available_income_amount
 code: |    
-  if parenting_arangment == "two-thirds":
+  if parenting_arrangement == "two-thirds":
     parents2_other_low_income_adjusted = 0     
   else:
     if parents1_available_income_amount > 249:
@@ -1441,11 +1441,11 @@ code: |
 #will refrence only recipient_payor variable for logic about payor's owed amounts
 #if recipient_payor == 'Recipient' (assumes P1 recipient) else: (assumes P2 recipient)
 depends on:
-  - parenting_arangment
+  - parenting_arrangement
   - parents2_other_limited_adjusted_amount
   - parents1_other_limited_adjusted_amount
 code: |
-  if parenting_arangment == "two-thirds":
+  if parenting_arrangement == "two-thirds":
     # parent1 is recipient values and parent2 is payor values
     recipient_payor = "Recipient"
     payor_recipient = "Payor"
@@ -1463,11 +1463,11 @@ code: |
 #sets recipients_support_income_percent, 7a
 #math from worksheet
 depends on:
- - parenting_arangment
+ - parenting_arrangement
  - payors_adjusted_share_amount
  - parents1_available_income_amount
 code: |
-  if parenting_arangment == 'two-thirds':
+  if parenting_arrangement == 'two-thirds':
     if parents1_available_income_amount == 0:
       recipients_support_income_percent = "N/A"
     else:
@@ -1492,7 +1492,7 @@ code: |
   elif recipients_support_income_percent >= .1:
     payors_disparity_adjusted_amount = payors_adjusted_share_amount  
   elif recipients_support_income_percent < .1:
-    if parenting_arangment == 'two-thirds':
+    if parenting_arrangement == 'two-thirds':
       #parents1 recipient and parents2 payor
       payors_disparity_adjusted_amount = payors_adjusted_share_amount
     else:
