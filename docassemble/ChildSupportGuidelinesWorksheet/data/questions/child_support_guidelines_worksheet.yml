@@ -81,9 +81,12 @@ code: |
   parents1_under_18_number
   parents1_name_full
   parents1_gross_amount
+  parents1_SS_dependency_amount
   set_parents1_ss_benefits_zero
+  adjust_parents1_gross_amount
   parents2_gross_amount
   set_parents2_ss_benefits_zero
+  adjust_parents2_gross_amount
   set_progress(28)
   parents1_other_obligations_amount
   parents2_other_obligations_amount
@@ -215,12 +218,6 @@ fields:
       - Parenting time and financial responsibilities are **shared** mostly equally.: shared      
       - All of the children live with one parent about **two-thirds** of the time.: two-thirds
       - The children are **split** between the parents. Each parent has primary custody of at least one child.: split      
-#  - "Need more explanation of **parenting arrangement**?": explain_arangment_yesno
-#    datatype: yesnoradio
-#  - note: |
-#      * **Shared** is when both parenting time and financial responsibilities for the children are mostly equal. This means that the kids will stay with each parent half the time, and the costs assocaited with raising the kids are split equally.
-#      * **Two-thirds**
-#      * **Split**
   - "What is the name of the parent that has the children approximately **two-thirds** of the time?": parents1_name_full
     show if: 
       variable: parenting_arrangement
@@ -304,8 +301,7 @@ fields:
       code: |
         any_children_over_18 == True
 ---
-# hashed out lines are accesibility improvments. Should ask if they get SS before asking about figures
-id: What does Parents 1 income situation look like
+id: parents1 gross income info
 question: |
   What does ${ parents1_name_full }'s weekly income situation look like?
 fields:
@@ -313,16 +309,57 @@ fields:
     datatype: currency
     min: 0
     help: |
-      "Gross Weekly Income is your income before taxes and deductions are taken out. It does not include public assistance like welfare, TAFDC, SSI, and Food Stamps SNAP. If you get a Social Security dependency benefit for your child, do not include that benefit in this field, you will be asked for it below.
-  - "Does ${ parents1_name_full } recieve any Social Security benfits?": parents1_ss_yes
+      "Gross Weekly Income" is your income before taxes and deductions are taken out. It does not include public assistance like welfare, TAFDC, SSI, and Food Stamps SNAP. If you get a Social Security dependency benefit for your child, do not include that benefit in this field, you will be asked for it soon.
+  - "Does the gross income amount include public assistance like TAFDC/Welfare, SSI, and Food Stamps/SNAP?": parents1_gross_include_public_assistance
     datatype: yesnoradio
-  - "What is ${ parents1_name_full }'s Social Security benefit?": parents1_SS_dependency_amount
+    help: "The number giving you Gross Income from the Finacial Statement includes these numbers."
+  - "How much in {TAFDC/Welfare} does ${ parents1_name_full } recieve?": parents1_tafdc_amount
+    datatype: number
+    show if: parents1_gross_include_public_assistance
+    help: "This is a cash benefits program."
+    default: 0
+  - "How much {SSI} does ${ parents1_name_full } recieve?": parents1_ssi_amount
+    datatype: number
+    show if: parents1_gross_include_public_assistance
+    help: "Supplemental Security Income (SSI) is a means tested suplamental income program."
+    default: 0
+  - "How much in {Food Stamps/SNAP} does ${ parents1_name_full } recieve?": parents1_food_stamps_amount
+    datatype: number
+    show if: parents1_gross_include_public_assistance
+    help: "Food Stamps"
+    default: 0
+terms:
+  TAFDC/Welfare: |
+    TAFDC and Welfare are the same thing. Transitional Assistance to Families with Dependent Children (TAFDC) is a means tested cash benefits program for families who have dependent children.
+  SSI: |
+    Supplamental Security Income (SSI) is a means tested program for disabled children, disabled adults, and individuals aged 65 or older.
+  Food Stamps/SNAP: |
+    Food Stamps is now called SNAP. It is a means tested food voucher program run by the state government. Qualifying people get monthly money for food purchases sent to a EBT card.
+---
+#parents1 public assistance adjustment to gross weekly income
+depends:
+  - parents1_gross_include_public_assistance
+code: |
+  if parents1_gross_include_public_assistance == True:
+    parents1_gross_amount = parents1_gross_amount - parents1_ssi_amount - parents1_food_stamps_amount - parents1_tafdc_amount
+  else:
+    parents1_gross_amount = parents1_gross_amount
+  adjust_parents1_gross_amount = True
+---
+id: parents1 social security info
+question: |
+  Does ${ parents1_name_full } recieve any dependecy benefits as a part of their Social Security income?
+fields:
+  - "Does ${ parents1_name_full } recieve any **Social Security Dependency** benfits?": parents1_ss_yes
+    datatype: yesnoradio
+    help: "Social Security Dependency benefits is the amount you recieve becuase of a dependant you have, this is distinct from what you might be recieving for yourself."
+  - "What is ${ parents1_name_full }'s Social Security Dependency benefit?": parents1_SS_dependency_amount
     datatype: currency
     min: 0
     help: |
       This will be info on what numbers to give.  
     show if: parents1_ss_yes
-  - "How much of ${ parents1_name_full }'s Social Security benefit is sent directly to them?": parents1_SS_dependency_recievied_amount   
+  - "How much of ${ parents1_name_full }'s Social Security Dependency benefit is sent directly to them?": parents1_SS_dependency_recievied_amount   
     datatype: currency
     min: 0
     help: |
@@ -338,27 +375,57 @@ code: |
     parents1_SS_dependency_recievied_amount = 0
   set_parents1_ss_benefits_zero = True 
 ---
-# hashed out lines are accesibility improvments. Should ask if they get SS before asking about figures
-id: What does parents2 income situation look like
+id: parents2 gross income
 question: |
   What does ${ parents2_name_full }'s income situation look like?
-subquestion: |
-  Weekly gross income and social security benefits collected.
 fields:
   - "What is ${ parents2_name_full }'s gross **weekly** income?": parents2_gross_amount
     datatype: currency
     help: |
-      "Gross Weekly Income" is your income before taxes and deductions are taken out. It does not include public assistance like welfare, TAFDC, SSI, and Food Stamps SNAP. If you get a Social Security dependency benefit for your child, do not include that benefit in this field, you will be asked for it below.
+      "Gross Weekly Income" is your income before taxes and deductions are taken out. It does not include public assistance like welfare, TAFDC, SSI, and Food Stamps SNAP. If you get a Social Security dependency benefit for your child, do not include that benefit in this field, you will be asked for it soon.
     min: 0
-  - "Does ${ parents2_name_full } recieve any Social Security benfits?": parents2_ss_yes
+  - "Does the gross income amount include public assistance like TAFDC/Welfare, SSI, and Food Stamps/SNAP?": parents2_gross_include_public_assistance
     datatype: yesnoradio
-  - "How much is ${ parents2_name_full } Social Security benefit?": parents2_SS_dependency_amount   
+    help: "The number giving you Gross Income from the Finacial Statement includes these numbers."
+  - "How much in TAFDC/Welfare does ${ parents2_name_full } recieve?": parents2_tafdc_amount
+    datatype: number
+    show if: parents2_gross_include_public_assistance
+    help: "This is a cash benefits program"
+    default: 0
+  - "How much SSI does ${ parents2_name_full } recieve?": parents2_ssi_amount
+    datatype: number
+    show if: parents2_gross_include_public_assistance
+    help: "Supplemental Security Income (SSI) is a means tested suplamental income program."
+    default: 0
+  - "How much in Food Stamps does ${ parents2_name_full } recieve?": parents2_food_stamps_amount
+    datatype: number
+    show if: parents2_gross_include_public_assistance
+    help: "Food Stamps"
+    default: 0    
+---
+#parents2 public assistance adjustment to gross weekly income
+depends:
+  - parents2_gross_include_public_assistance
+code: |
+  if parents2_gross_include_public_assistance == True:
+    parents2_gross_amount = parents2_gross_amount - parents2_ssi_amount - parents2_food_stamps_amount - parents2_tafdc_amount
+  else:
+    parents2_gross_amount = parents2_gross_amount
+  adjust_parents2_gross_amount = True
+---
+id: parents2 social security
+question: |
+  Does ${ parents2_name_full } recieve any dependecy benefits as a part of their Social Security income?
+fields:
+  - "Does ${ parents2_name_full } recieve any Social Security Dependency benfits?": parents2_ss_yes
+    datatype: yesnoradio
+  - "How much is ${ parents2_name_full } Social Security Dependency benefit?": parents2_SS_dependency_amount   
     datatype: currency
     min: 0
     help: |
       This will be info on what numbers to give.      
     show if: parents2_ss_yes
-  - "How much of ${ parents2_name_full }'s Social Security benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
+  - "How much of ${ parents2_name_full }'s Social Security Dependency benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
     datatype: currency
     min: 0
     help: |
@@ -374,11 +441,9 @@ code: |
     parents2_SS_dependency_recievied_amount = 0
   set_parents2_ss_benefits_zero = True 
 ---
-id: How much does Parents 1 pay for health and other expenses
+id: parents1 health and other expenses
 question: |
   How much does ${ parents1_name_full } pay for health and other expenses?
-subquestion: |
-  Other Obligations, Health Insurance, Dental/Vision Insurance
 fields:  
   - "Put the weekly amount that ${ parents1_name_full } actually pays for individual or family health care coverage?": parents1_health_care_amount
     datatype: currency
@@ -389,106 +454,138 @@ fields:
     datatype: currency
     min: 0
     help : |
-      In this field, put the cost of dental and vision insurance for the children. Put the weekly amount each parent actually pays for dental and vision insurance.
-  - "Put the weekly amount ${ parents1_name_full } pays in existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case:": parents1_other_obligations_amount
+      In this field, put the cost of dental and vision insurance for the children. Put the weekly amount each parent actually pays for dental and vision insurance. **Unlike health care coverage this number is limited to what is actually paid for the child**.
+  - "Put the weekly amount ${ parents1_name_full } pays in existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case.:": parents1_other_obligations_amount
     datatype: currency
     min: 0 
     help: |
       In this field, put existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case.
 ---
-id: How much does Parents 2 pay for health and other expenses
+id: parents2 health and other expenses
 question: |
-  How much does ${ parents2_name_full } pay for health and other expenses?
-subquestion: |
-  Other Obligations, Health Insurance, Dental/Vision Insurance
+  How much does ${ parents2_name_full } pay for health, dental, and vision insurance, as well as any child support payements already being made?
 fields:
-  - "How much does ${ parents2_name_full } pay for health insurance enrollment?": parents2_health_care_amount
+  - "Put the weekly amount that ${ parents2_name_full } actually pays for individual or family health care coverage.": parents2_health_care_amount
     datatype: currency
     min: 0
     help: |
-     In this field, put the cost of individual or family health care coverage. Put the weekly amount each parent actually pays for individual or family health care coverage.
-  - "How much does ${ parents2_name_full } pay for dental and vision insurance?": parents2_dental_vision_amount
+     In this field, put the cost of individual or family health care coverage. Put the weekly amount each parent actually pays for individual or family health insurance coverage.
+  - "Put the weekly amount ${ parents2_name_full } actually pays for dental and/or vision insurance **for the children**.": parents2_dental_vision_amount
     datatype: currency
     min: 0
     help : |
-      In this field, put the cost of dental and vision insurance for the children. Put the weekly amount each parent actually pays for dental and vision insurance.
-  - "How much does ${ parents2_name_full } pay in support for other obligations:": parents2_other_obligations_amount
+      In this field, put the cost of dental and vision insurance for the children. Put the weekly amount each parent actually pays for dental and vision insurance. **Unlike health care coverage this number is limited to what is actually paid for the child**.
+  - "Put the weekly amount ${ parents2_name_full } pays in existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case.": parents2_other_obligations_amount
     datatype: currency
     min: 0
     help: |
       In this field, put existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case.
 ---
-id: How much does Parents1 pay for each child
+id: parents1 work expenses for each child
 question: |
-  How much does ${ parents1_name_full } pay for each child for work-related child care expenses?
-subquestion: |
-  This page is for work-related child care expenses. Put the weekly amount each parent actually pays for work-related child care or child care so they can get work-related training and education. Put the amount for each child up to $355 per week, per child covered by the order.
+   Does ${ parents1_name_full } pay for child care costs for work-related reasons?
 fields:
+  - "Does ${ parents1_name_full } pay any child care costs to enable them to go to work or to training for work?": parents1_child_care_yesno
+    datatype: yesnoradio
+  - note: "Put the weekly amount ${ parents1_name_full } actually pays for work-related child care or child care so they can get work-related training and education. The limit for each child covered by the order is $355 per week."
+    show if: parents1_child_care_yesno
   - "What are the work-related child care expenses for Child 1?": parents1_child1_amount
     datatype: currency
     min: 0
+    max: 355
     show if: 
+      variable: parents1_child_care_yesno
+      is: True
       code: |
         children_number >= 1 
   - "What are the work-related child care expenses for Child 2?": parents1_child2_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents1_child_care_yesno
+      is: True
       code: |
         children_number >= 2
   - "What are the work-related child care expenses for Child 3?": parents1_child3_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents1_child_care_yesno
+      is: True
       code: |
         children_number >= 3
   - "What are the work-related child care expenses for Child 4?": parents1_child4_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents1_child_care_yesno
+      is: True
       code: |
         children_number >= 4
   - "What are the work-related child care expenses for Child 5?": parents1_child5_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents1_child_care_yesno
+      is: True
       code: |
         children_number >= 5
 ---
-id: How much does Parents2 pay in support for each child
+id: parents2 work expenses for each child
 question: |
   How much does ${ parents2_name_full } pay for each child for work-related child care expenses?
-subquestion: |
-  This page is for work-related child care expenses. Put the weekly amount each parent actually pays for work-related child care or child care so they can get work-related training and education. Put the amount for each child up to $355 per week, per child covered by the order.
 fields:
+  - "Does ${ parents2_name_full } pay any child care costs to enable them to go to work or to training for work?": parents2_child_care_yesno
+    datatype: yesnoradio 
+  - note: "Put the weekly amount ${ parents2_name_full } actually pays for work-related child care or child care so they can get work-related training and education. The limit for each child covered by the order is $355 per week."
+    show if: parents2_child_care_yesno
   - "What are the work-related child care expenses for Child 1": parents2_child1_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents2_child_care_yesno
+      is: True
       code: |
         children_number >= 1
   - "What are the work-related child care expenses for Child 2?": parents2_child2_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents2_child_care_yesno
+      is: True
       code: |
         children_number >= 2
   - "What are the work-related child care expenses for Child 3?": parents2_child3_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents2_child_care_yesno
+      is: True
       code: |
         children_number >= 3
   - "What are the work-related child care expenses for Child 4?": parents2_child4_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents2_child_care_yesno
+      is: True
       code: |
         children_number >= 4
   - "What are the work-related child care expenses for Child 5?": parents2_child5_amount
     datatype: currency
     min: 0
-    show if: 
+    max: 355
+    show if:
+      variable: parents2_child_care_yesno
+      is: True
       code: |
         children_number >= 5
 ---
