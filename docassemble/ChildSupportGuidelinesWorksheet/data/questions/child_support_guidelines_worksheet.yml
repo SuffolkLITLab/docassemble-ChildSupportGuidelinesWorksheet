@@ -91,8 +91,10 @@ code: |
   parents1_other_obligations_amount
   parents2_other_obligations_amount
   parents1_child2_amount
+  set_parents1_no_child_care
   set_progress(42)
   parents2_child1_amount
+  set_parents2_no_child_care
   set_default_children_amounts
   set_progress(57)
   calculate_parents2_available_income_amount
@@ -110,6 +112,7 @@ code: |
   calculate_parents2_children_adjustments
   calculate_parents1_other_limited_adjusted_amount
   calculate_parents2_other_limited_adjusted_amount
+  set_parents2_other_adjusted_support_share
   set_parents1_income_support_percent
   set_parents2_income_support_percent
   set_parents1_share_support_percent
@@ -117,12 +120,14 @@ code: |
   set_parents1_other_share_support
   set_parents2_other_share_support
   set_recipient_payor_statuses
+  set_payors_adjusted_share_amount 
   set_combined_additional_income_amount 
   parents1_benchmark_amount
   parents2_benchmark_amount
   set_recipients_support_income_percent
   set_payors_disparity_adjusted_amount
-  mass_gov_yes
+  set_mass_gov_yes
+  rerun_recipient_ss_dependecy
   set_payors_SS_credit_amount
   set_payors_obligations_amount
   set_payors_support_income_percent_amount
@@ -321,7 +326,7 @@ fields:
   - "How much {SSI} does ${ parents1_name_full } recieve?": parents1_ssi_amount
     datatype: number
     show if: parents1_gross_include_public_assistance
-    help: "Supplemental Security Income (SSI) is a means tested suplamental income program."
+    help: "Supplemental Security Income (SSI) is a means tested supplemental income program."
     default: 0
   - "How much in {Food Stamps/SNAP} does ${ parents1_name_full } recieve?": parents1_food_stamps_amount
     datatype: number
@@ -350,16 +355,16 @@ id: parents1 social security info
 question: |
   Does ${ parents1_name_full } recieve any dependecy benefits as a part of their Social Security income?
 fields:
-  - "Does ${ parents1_name_full } recieve any **Social Security Dependency** benfits?": parents1_ss_yes
+  - "Does ${ parents1_name_full } recieve any Social Security dependency benfits?": parents1_ss_yes
     datatype: yesnoradio
-    help: "Social Security Dependency benefits is the amount you recieve becuase of a dependant you have, this is distinct from what you might be recieving for yourself."
-  - "What is ${ parents1_name_full }'s Social Security Dependency benefit?": parents1_SS_dependency_amount
+    note: "Social Security dependency benefits is the amount you recieve becuase of a dependant you have, this is distinct from what you might be recieving for yourself."
+  - "What is ${ parents1_name_full }'s Social Security dependency benefit?": parents1_SS_dependency_amount
     datatype: currency
     min: 0
     help: |
       This will be info on what numbers to give.  
     show if: parents1_ss_yes
-  - "How much of ${ parents1_name_full }'s Social Security Dependency benefit is sent directly to them?": parents1_SS_dependency_recievied_amount   
+  - "How much of ${ parents1_name_full }'s Social Security dependency benefit is sent directly to them?": parents1_SS_dependency_recievied_amount   
     datatype: currency
     min: 0
     help: |
@@ -386,7 +391,7 @@ fields:
     min: 0
   - "Does the gross income amount include public assistance like TAFDC/Welfare, SSI, and Food Stamps/SNAP?": parents2_gross_include_public_assistance
     datatype: yesnoradio
-    help: "The number giving you Gross Income from the Finacial Statement includes these numbers."
+    help: "The number giving you Gross Income from the Financial Statement includes these numbers."
   - "How much in TAFDC/Welfare does ${ parents2_name_full } recieve?": parents2_tafdc_amount
     datatype: number
     show if: parents2_gross_include_public_assistance
@@ -395,7 +400,7 @@ fields:
   - "How much SSI does ${ parents2_name_full } recieve?": parents2_ssi_amount
     datatype: number
     show if: parents2_gross_include_public_assistance
-    help: "Supplemental Security Income (SSI) is a means tested suplamental income program."
+    help: "Supplemental Security Income (SSI) is a means tested supplemental income program."
     default: 0
   - "How much in Food Stamps does ${ parents2_name_full } recieve?": parents2_food_stamps_amount
     datatype: number
@@ -417,15 +422,16 @@ id: parents2 social security
 question: |
   Does ${ parents2_name_full } recieve any dependecy benefits as a part of their Social Security income?
 fields:
-  - "Does ${ parents2_name_full } recieve any Social Security Dependency benfits?": parents2_ss_yes
+  - "Does ${ parents2_name_full } recieve any Social Security dependency benfits?": parents2_ss_yes
     datatype: yesnoradio
-  - "How much is ${ parents2_name_full } Social Security Dependency benefit?": parents2_SS_dependency_amount   
+    note: "Social Security Dependency benefits is the amount you recieve becuase of a dependant you have, this is distinct from what you might be recieving for yourself."
+  - "How much is ${ parents2_name_full }'s Social Security dependency benefit?": parents2_SS_dependency_amount   
     datatype: currency
     min: 0
     help: |
       This will be info on what numbers to give.      
     show if: parents2_ss_yes
-  - "How much of ${ parents2_name_full }'s Social Security Dependency benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
+  - "How much of ${ parents2_name_full }'s Social Security dependency benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
     datatype: currency
     min: 0
     help: |
@@ -443,7 +449,7 @@ code: |
 ---
 id: parents1 health and other expenses
 question: |
-  How much does ${ parents1_name_full } pay for health and other expenses?
+  How much does ${ parents1_name_full } pay for health, dental, and vision insurance? And, are any child support payements already being made - informal or court-ordered?
 fields:  
   - "Put the weekly amount that ${ parents1_name_full } actually pays for individual or family health care coverage?": parents1_health_care_amount
     datatype: currency
@@ -463,7 +469,7 @@ fields:
 ---
 id: parents2 health and other expenses
 question: |
-  How much does ${ parents2_name_full } pay for health, dental, and vision insurance, as well as any child support payements already being made?
+  How much does ${ parents2_name_full } pay for health, dental, and vision insurance? And, are any child support payements already being made - informal or court-ordered?
 fields:
   - "Put the weekly amount that ${ parents2_name_full } actually pays for individual or family health care coverage.": parents2_health_care_amount
     datatype: currency
@@ -535,6 +541,18 @@ fields:
       code: |
         children_number >= 5
 ---
+#sets parents1 work expenses to 0 when needed
+depends on:
+  - parents1_child_care_yesno
+code: |
+  if parents1_child_care_yesno == False:
+    parents1_child1_amount = 0
+    parents1_child2_amount = 0
+    parents1_child3_amount = 0
+    parents1_child4_amount = 0
+    parents1_child5_amount = 0
+  set_parents1_no_child_care = True
+---
 id: parents2 work expenses for each child
 question: |
   How much does ${ parents2_name_full } pay for each child for work-related child care expenses?
@@ -588,6 +606,18 @@ fields:
       is: True
       code: |
         children_number >= 5
+---
+#sets parents2 work expenses to 0 when needed
+depends on:
+  - parents2_child_care_yesno
+code: |
+  if parents2_child_care_yesno == False:
+    parents2_child1_amount = 0
+    parents2_child2_amount = 0
+    parents2_child3_amount = 0
+    parents2_child4_amount = 0
+    parents2_child5_amount = 0
+  set_parents2_no_child_care = True
 ---
 code: |
   if children_number == 1:
@@ -1469,6 +1499,38 @@ code: |
   
   parents2_benchmark_amount = sum(children_amounts)
 ---
+#sets parents1_other_benchmark_share_amount, 6b, Parent A
+depends on:
+  - parents2_income_share_percent
+  - parents1_benchmark_amount
+code: |
+  parents1_other_benchmark_share_amount = parents2_income_share_percent * parents1_benchmark_amount
+  set_parents1_other_benchmark_share_amount = True
+---
+#sets parents2_other_benchmark_share_amount, 6b, Parent b
+depends on:
+  - parents1_income_share_percent
+  - parents2_benchmark_amount
+code: |
+  parents2_other_benchmark_share_amount = parents1_income_share_percent * parents2_benchmark_amount
+  set_parents2_other_benchmark_share_amount = True
+---
+#sets parents1_other_adjusted_support_share, 6c, Parent A
+depends on:
+  - parents1_other_low_income_adjusted
+  - parents1_other_benchmark_share_amount
+code: |
+  parents1_other_adjusted_support_share = parents1_other_low_income_adjusted + parents1_other_benchmark_share_amount
+  set_parents1_other_adjusted_support_share = True 
+---
+#sets parents2_other_adjusted_support_share, 6c, Parent B
+depends on:
+  - parents2_other_low_income_adjusted
+  - parents2_other_benchmark_share_amount
+code: |
+  parents2_other_adjusted_support_share = parents2_other_low_income_adjusted + parents2_other_benchmark_share_amount
+  set_parents2_other_adjusted_support_share = True 
+---
 #sets parents1_income_support_percent, 6d, Parent A
 #math from MLRI Guidlines
 #two_thirds_yes == True wants to have N/A display
@@ -1477,7 +1539,7 @@ depends on:
   - parents1_other_adjusted_support_share
 code: |
   if parents1_available_income_amount == 0:
-    parents1_income_support_percent = .1
+    parents1_income_support_percent = 1
   else:
     parents1_income_support_percent = parents1_other_adjusted_support_share / parents1_available_income_amount
   set_parents1_income_support_percent = True
@@ -1490,7 +1552,7 @@ depends on:
   - parents2_other_adjusted_support_share
 code: |
   if parents2_available_income_amount == 0:
-    parents2_income_support_percent = .1
+    parents2_income_support_percent = 1
   else:
     parents2_income_support_percent = parents2_other_adjusted_support_share / parents2_available_income_amount
   set_parents2_income_support_percent = True
@@ -1502,12 +1564,11 @@ depends on:
   - parents2_income_share_percent
   - parents1_other_adjusted_support_share
 code: |
-  if parents1_income_support_percent == 0:
+  if parenting_arrangement == 'two-thirds':
     parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share    
-  elif parents1_income_support_percent >= 10:
-  #CAN I DO A ELIF (VARIABLE) IS IN SOME RANGE? IE. 2-10
+  elif parents1_income_support_percent >= .1:
     parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share
-  else:
+  elif parents1_income_support_percent < .1:
     if parents1_other_adjusted_support_share <= ((parents1_income_support_percent + (parents1_income_support_percent * .1)) * parents2_available_income_amount):
       parents1_other_limited_adjusted_amount = parents1_other_adjusted_support_share
     else:
@@ -1522,21 +1583,18 @@ depends on:
   - parents2_other_adjusted_support_share
   - parents1_available_income_amount
 code: |
-  if parents2_income_support_percent == 0:
+  if parenting_arrangement == 'two-thirds':
     parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share    
-  elif parents2_income_support_percent >= 10:
-  #CAN I DO A ELIF (VARIABLE) IS IN SOME RANGE? IE. 2-10
+  elif parents2_income_support_percent >= .1:
     parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share
-  else:
+  elif parents2_income_support_percent < .1:
     if parents2_other_adjusted_support_share <= ((parents2_income_support_percent + (parents2_income_support_percent * .1)) * parents1_available_income_amount):
       parents2_other_limited_adjusted_amount = parents2_other_adjusted_support_share
     else:
       parents2_other_limited_adjusted_amount = ((parents2_income_support_percent + (parents2_income_support_percent * .1)) * parents1_available_income_amount)
   calculate_parents2_other_limited_adjusted_amount = True  
 ---
-#this code defines both Payor and Recipient statuses
-#will refrence only recipient_payor variable for logic about payor's owed amounts
-#if recipient_payor == 'Recipient' (assumes P1 recipient) else: (assumes P2 recipient)
+#this code defines both Payor and Recipient statuses, 6f
 depends on:
   - parenting_arrangement
   - parents2_other_limited_adjusted_amount
@@ -1556,6 +1614,64 @@ code: |
       recipient_payor = "Payor"
       payor_recipient = "Recipient"
   set_recipient_payor_statuses = True
+---
+#sets payors_adjusted_share_amount, 6g
+depends on: 
+  - parenting_arrangement
+  - parents2_other_limited_adjusted_amount
+  - parents1_other_limited_adjusted_amount
+code: |
+  if parenting_arrangement == "two-thirds":
+    # parent1 is recipient values and parent2 is payor values
+    payors_adjusted_share_amount = parents1_other_limited_adjusted_amount - parents2_other_limited_adjusted_amount
+  else:
+    if parents2_other_limited_adjusted_amount < parents1_other_limited_adjusted_amount:
+      # parent1 is recipient values and parent2 is payor values
+      payors_adjusted_share_amount = parents1_other_limited_adjusted_amount - parents2_other_limited_adjusted_amount
+    else:
+      # parent2 is recipient values and parent1 is payor values    
+      payors_adjusted_share_amount = parents2_other_limited_adjusted_amount - parents1_other_limited_adjusted_amount
+  set_payors_adjusted_share_amount = True
+---
+#checkbox on 6g. re-runs sheet if there is a recipient dependency benefit.
+depends on:
+  - parenting_arrangement
+  - parents1_SS_dependency_amount
+  - parents2_SS_dependency_amount
+code: |
+  if parenting_arrangement == 'two-thirds':
+    #no check mark if ^
+    mass_gov_yes = False
+  else:
+    if parents2_other_limited_adjusted_amount < parents1_other_limited_adjusted_amount:
+      # parent1 is recipient values and parent2 is payor values
+      if parents1_SS_dependency_amount >= 1:
+        mass_gov_yes = True
+      else:        
+        mass_gov_yes = False
+    else:
+      # parent2 is recipient values and parent1 is payor values    
+      if parents2_SS_dependency_amount >= 1:
+        mass_gov_yes = True
+      else:        
+        mass_gov_yes = False
+  set_mass_gov_yes = True
+---
+#code block that re-runs sheet if mass_gov_yes == True - there is a check mark.
+#dependencies on all variables should trigger since { parents1_SS_dependency_amount } will change
+depends on:
+  - mass_gov_yes
+code: |
+  if mass_gov_yes:
+  #known parenting_arangment == shared or split (NOT two-thirds)    
+    if parents2_other_limited_adjusted_amount < parents1_other_limited_adjusted_amount:
+      # parent1 is recipient values and parent2 is payor values
+      parents1_SS_dependency_amount = parents1_SS_dependency_recievied_amount
+    else:
+      # parent2 is recipient values and parent1 is payor values    
+      parents2_SS_dependency_amount = parents2_SS_dependency_recievied_amount
+  #do i need to do an else when mass_gov_yes is not true? I just want nothing to happen.     
+  rerun_recipient_ss_dependecy = True
 ---
 #sets recipients_support_income_percent, 7a
 #math from worksheet
@@ -1579,9 +1695,9 @@ code: |
 #If 7a is < 10%, enter 6e, 6g, or ((7a + 10%) x Payor 3a), whichever is less,
 #but not less than an amount from the shaded area of the Guidelines Chart
 depends on:
-  - 7a
+  - recipients_support_income_percent
   - 6e
-  - 6g
+  - payors_adjusted_share_amount
   - payor 3a
 code: |
   if recipients_support_income_percent == 'N/A':
@@ -1613,8 +1729,12 @@ code: |
 depends on:
   - payors_SS_credit_amount
   - payors_disparity_adjusted_amount
+#7b > 7c, enter 7b - 7c; otherwise enter $0
 code: |
-  payors_obligations_amount = 250
+  if payors_disparity_adjusted_amount > payors_SS_credit_amount:
+    payors_obligations_amount = payors_disparity_adjusted_amount - payors_SS_credit_amount
+  else:
+    payors_obligations_amount =  0 
   set_payors_obligations_amount = True
 ---
 # sets payors_support_income_percent_amount, 7e
@@ -1676,10 +1796,6 @@ code: |
   parents2_adjusted_support_amount = DAEmpty()
   parents1_other_low_income_adjusted = DAEmpty()
   parents2_other_low_income_adjusted = DAEmpty()
-  parents1_other_adjusted_support_share = (parents1_income_share_percent * parents2_benchmark_amount) + parents2_other_low_income_adjusted
-  parents2_other_adjusted_support_share = (parents2_income_share_percent * parents1_benchmark_amount) + parents1_other_low_income_adjusted
-  #payors_adjusted_share_amount has a temp number. Complicated logic to set value. 
-  payors_adjusted_share_amount = 250
   parents1_additional_income_amount = DAEmpty()
   parents2_additional_income_amount = DAEmpty()
   parents1_other_benchmark_share_amount = DAEmpty()
@@ -1804,8 +1920,8 @@ attachments:
       - "parents1_benchmark_amount": ${ currency(round(parents1_benchmark_amount)) }
       - "parents1_other_benchmark_share_amount": ${ currency(round(parents2_income_share_percent * parents1_benchmark_amount)) } 
       - "parents2_other_benchmark_share_amount": ${ currency(round(parents1_income_share_percent * parents2_benchmark_amount)) }
-      - "parents1_other_adjusted_support_share": ${ currency(round((parents2_income_share_percent * parents1_benchmark_amount) + parents1_other_low_income_adjusted)) } 
-      - "parents2_other_adjusted_support_share": ${ currency(round((parents1_income_share_percent * parents2_benchmark_amount) + parents2_other_low_income_adjusted)) } 
+      - "parents1_other_adjusted_support_share": ${ currency(parents1_other_adjusted_support_share) } 
+      - "parents2_other_adjusted_support_share": ${ currency(parents2_other_adjusted_support_share) } 
       - "parents1_income_support_percent": |
           % if two_thirds_yes == True:
           N/A
