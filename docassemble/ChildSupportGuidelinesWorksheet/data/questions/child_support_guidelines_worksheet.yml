@@ -81,10 +81,11 @@ code: |
   parents1_under_18_number
   parents1_name_full
   parents1_gross_amount
-  parents1_SS_dependency_amount
+  parents1_ss_yes
   set_parents1_ss_benefits_zero
   adjust_parents1_gross_amount
   parents2_gross_amount
+  parents2_ss_yes
   set_parents2_ss_benefits_zero
   adjust_parents2_gross_amount
   set_progress(28)
@@ -110,6 +111,8 @@ code: |
   calculate_parents1_child_number_adjustments
   calculate_parents1_children_adjustments
   calculate_parents2_children_adjustments
+  set_parents1_adjusted_support_amount
+  set_parents2_adjusted_support_amount
   calculate_parents1_other_limited_adjusted_amount
   calculate_parents2_other_limited_adjusted_amount
   set_parents2_other_adjusted_support_share
@@ -1059,8 +1062,7 @@ subquestion: |
 
 progress: 100
 ---
-#Parent A, 3a
-#sets parent 1 available income
+#sets parents1_gross_amount, 3a, Parent A 
 depends on:
   - parents1_SS_dependency_amount
   - parents1_gross_amount
@@ -1071,11 +1073,10 @@ code: |
   if parents1_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount <= 0:
     parents1_available_income_amount = 0
   else:
-    parents1_available_income_amount = parents1_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount
+    parents1_available_income_amount = round(parents1_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount)
   calculate_parents1_available_income_amount = True
 ---
-#Parent B, 3a
-#sets parent2 available income
+#sets parents2_gross_amount, 3a, Parent B
 depends on:
   - parents2_SS_dependency_amount
   - parents2_gross_amount
@@ -1086,30 +1087,26 @@ code: |
   if parents2_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount <= 0:
     parents2_available_income_amount = 0
   else:
-    parents2_available_income_amount = parents2_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount
+    parents2_available_income_amount = round(parents2_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount)
   calculate_parents2_available_income_amount = True
----
-#combined_available_income_amount, 3b
-#calculates combined_available_income_amount
+--- 
+#calculates combined_available_income_amount, 3b
 depends on:
   - parents1_available_income_amount
   - parents2_available_income_amount
 code : |
-  combined_available_income_amount = parents1_available_income_amount + parents2_available_income_amount
+  combined_available_income_amount = round(parents1_available_income_amount + parents2_available_income_amount)
   calculate_combined_available_income_amount = True
 ---
-#Parent A, 3c
-#gets parent 1 income share percentage
+#sets parents1_income_share_percent, 3c, Parent A 
 depends on:
   - parents1_available_income_amount
   - combined_available_income_amount
 code: |
   parents1_income_share_percent = parents1_available_income_amount / combined_available_income_amount
-  # the sheet asks to round to nearest percent. should we be rounding the result to the nearest 0.XX,   not sure effect on math with the reamining points?
   calculate_parents1_income_share_percent = True
 ---
-#Parent B, 3c
-#gets parent 2 income share percentage
+#sets parents2_income_share_percent, 3c, Parent B
 depends on: 
   - parents2_available_income_amount
   - combined_available_income_amount
@@ -1117,8 +1114,7 @@ code: |
   parents2_income_share_percent = parents2_available_income_amount / combined_available_income_amount
   calculate_parents2_income_share_percent = True
 ---
-# sets applicable_income_amount, 3d
-# calculates applicable_income_amount
+#calculates applicable_income_amount, 3d
 depends on: 
   - combined_available_income_amount
 code: |
@@ -1128,32 +1124,30 @@ code: |
    applicable_income_amount = 7692
  calculate_applicable_income_amount = True 
 ---
-#sets one_child_amount, 3e
-#gets the one child support amount
+#gets the one child support amount, 3e
 depends on:
   - applicable_income_amount
 code: |
   if round(applicable_income_amount) <= 210:
     one_child_support_amount = 12
   elif round(applicable_income_amount) <= 249:
-    one_child_support_amount = 12 + ((applicable_income_amount - 210) * .2)
+    one_child_support_amount = round(12 + ((applicable_income_amount - 210) * .2))
   elif round(applicable_income_amount) <= 750:
-    one_child_support_amount = 12 + (applicable_income_amount * .22)
+    one_child_support_amount = round(12 + (applicable_income_amount * .22))
   elif round(applicable_income_amount) <= 1400:
-    one_child_support_amount = 165 + ((applicable_income_amount - 750) * .21)
+    one_child_support_amount = round(165 + ((applicable_income_amount - 750) * .21))
   elif round(applicable_income_amount) <= 2200:
-    one_child_support_amount = 302 + ((applicable_income_amount - 1400) * .19)
+    one_child_support_amount = round(302 + ((applicable_income_amount - 1400) * .19))
   elif round(applicable_income_amount) <= 3500:
-    one_child_support_amount = 454 + ((applicable_income_amount - 2200) * .14)
+    one_child_support_amount = round(454 + ((applicable_income_amount - 2200) * .14))
   elif round(applicable_income_amount) <= 5000:
-    one_child_support_amount = 636 + ((applicable_income_amount - 3500) * .11)
+    one_child_support_amount = round(636 + ((applicable_income_amount - 3500) * .11))
   # hard coded max applicable_income_amount is 7692. else is that max. 
   else:
-    one_child_support_amount = 801 + ((applicable_income_amount - 5000) * .1)    
+    one_child_support_amount = round(801 + ((applicable_income_amount - 5000) * .1))  
   calculate_one_child_support_amount = True
 ---
 #sets parents2_child_number_adjustments, 3f, Parent B
-#finds parents2_child_number_adjustments value
 depends on:
   - parents2_total_children_number
 code: |
@@ -1173,7 +1167,6 @@ code: |
   calculate_parents2_child_number_adjustments = True
 ---
 #sets parents2_child_number_adjustments, 3f, Parent A
-#finds parents1_child_number_adjustments value
 depends on:
   - parents1_total_children_number 
 code: | 
@@ -1192,8 +1185,24 @@ code: |
     parents1_child_number_adjustments = 1.94    
   calculate_parents1_child_number_adjustments = True
 ---
-# sets parents1_children_adjustments, 4a, Parent A
-# based on table c on worksheet (adjustments for children >18 years old)
+#sets parents1_adjusted_support_amount, 3g, Parent A
+depends on:
+  - parents1_support_amount
+  - parents1_over_18_adjustments_amount
+code: |
+  parents1_adjusted_support_amount = round(parents1_support_amount - parents1_over_18_adjustments_amount)
+  set_parents1_adjusted_support_amount = True
+---
+#sets parents2_adjusted_support_amount, 3g, Parent B
+depends on:
+  - parents2_support_amount
+  - parents2_over_18_adjustments_amount
+code: |
+  parents2_adjusted_support_amount = round(parents2_support_amount - parents2_over_18_adjustments_amount)
+  set_parents2_adjusted_support_amount = True
+---
+#sets parents1_children_adjustments, 4a, Parent A
+#based on table c on worksheet (adjustments for children >18 years old)
 depends on:
   - parents1_under_18_number
   - parents1_total_children_number
@@ -1237,8 +1246,8 @@ code: |
     parents1_children_adjustments = 0
   calculate_parents1_children_adjustments = True
 ---
-# assigns parents2_children_adjustments - 4a, Parent B
-# based on table c on worksheet
+#assigns parents2_children_adjustments - 4a, Parent B
+#based on table c on worksheet
 depends on:
   - parents2_under_18_number
   - parents2_total_children_number
@@ -1290,40 +1299,34 @@ depends on:
   - parents1_income_share_percent
   - parents1_adjusted_support_amount
 code: |
-  parents1_share_support_amount = (parents1_income_share_percent * (parents1_support_amount - parents1_over_18_adjustments_amount))
+  parents1_share_support_amount = round(parents1_income_share_percent * parents1_adjusted_support_amount)
   set_parents1_share_support_percent = True
 ---
 #setting parents2_share_support_amount - 5a, Parent B
-#rules from MLRI Guidlines have parents2_share_support_amount blank if two-thirds true. Set to 1 here and will be displayed as DAEmpty() on form. Potential problems in future. 
+#rules from MLRI Guidlines have parents2_share_support_amount blank if two-thirds true.
 depends on: 
  - parents2_income_share_percent
  - parents2_adjusted_support_amount
  - parenting_arrangement
 code: |
- if parenting_arrangement == "two-thirds":
-   parents2_share_support_amount = 1
- else:
-   parents2_share_support_amount = round(parents2_adjusted_support_amount * parents2_income_share_percent)
- set_parents2_share_support_amount = True
+   parents2_share_support_amount = round(parents2_income_share_percent * parents2_adjusted_support_amount)
+   set_parents2_share_support_amount = True
 ---
 #setting parents1_other_share_support, 5b, Parent A
 depends on:
   - parents1_share_support_amount
   - parents1_over_18_adjustments_amount
 code: |
-  parents1_other_share_support = (parents1_support_amount - parents1_over_18_adjustments_amount) - parents1_share_support_amount 
+  parents1_other_share_support = round((parents1_support_amount - parents1_over_18_adjustments_amount) - parents1_share_support_amount)
   set_parents1_other_share_support = True
 ---
 #setting parents2_other_share_support, 5b, Parent B
-#rules from MLRI Guidlines have parents2_share_support_amount blank if two-thirds true. Set to 1 here and will be displayed as DAEmpty() on form. Potential problems in future.
+#rules from MLRI Guidlines have parents2_share_support_amount blank if two-thirds true.
 depends on:
  - parents2_share_support_amount
  - parents2_adjusted_support_amount
 code: |
-  if parenting_arrangement == 'two-thirds':
-    parents2_other_share_support = 1
-  else:
-    parents2_other_share_support = parents2_share_support_amount - parents2_adjusted_support_amount
+  parents2_other_share_support = round(parents2_adjusted_support_amount - parents2_share_support_amount)
   set_parents2_other_share_support = True
 ---
 #setting parents1_other_low_income_adjusted, 5c, Parent A
@@ -1680,10 +1683,11 @@ depends on:
  - payors_adjusted_share_amount
  - parents1_available_income_amount
 code: |
-  if parenting_arrangement == 'two-thirds':
+  if parenting_arrangement == 'two-thirds':    
     if parents1_available_income_amount == 0:
-      recipients_support_income_percent = "N/A"
+      recipients_support_income_percent = 1
     else:
+      #we know that parents1 is recipient and parents2 is payor from two-thirds == true
       recipients_support_income_percent = payors_adjusted_share_amount / parents1_available_income_amount
   else:
     recipients_support_income_percent = 'N/A'
@@ -1746,16 +1750,16 @@ depends on:
 code: |
   if recipient_payor == "Recipient":
     #parent1 are recipient values and parent2 is payor values
-    if parents1_available_income_amount == 0:
-      payors_support_income_percent_amount = 1
-    else:
-      payors_support_income_percent_amount = payors_obligations_amount / parents1_available_income_amount
-  else:
-    #parent2 are recipient values and parent1 is payor values
     if parents2_available_income_amount == 0:
       payors_support_income_percent_amount = 1
     else:
       payors_support_income_percent_amount = payors_obligations_amount / parents2_available_income_amount
+  else:
+    #parent2 are recipient values and parent1 is payor values
+    if parents1_available_income_amount == 0:
+      payors_support_income_percent_amount = 1
+    else:
+      payors_support_income_percent_amount = payors_obligations_amount / parents1_available_income_amount
   set_payors_support_income_percent_amount = True
 ---
 #sets obligations_hardship_yes, checkbox at 7e
@@ -1792,14 +1796,8 @@ code: |
   parents1_support_amount = one_child_support_amount * parents1_child_number_adjustments
   parents1_over_18_adjustments_amount = parents1_support_amount * parents1_children_adjustments
   parents2_over_18_adjustments_amount = parents2_support_amount * parents2_children_adjustments
-  parents1_adjusted_support_amount = parents1_support_amount - parents1_over_18_adjustments_amount
-  parents2_adjusted_support_amount = DAEmpty()
-  parents1_other_low_income_adjusted = DAEmpty()
-  parents2_other_low_income_adjusted = DAEmpty()
   parents1_additional_income_amount = DAEmpty()
   parents2_additional_income_amount = DAEmpty()
-  parents1_other_benchmark_share_amount = DAEmpty()
-  parents2_other_benchmark_share_amount = DAEmpty()
 ---
 objects:
   - child_support_guidelines_worksheet_post_interview_instructions: ALDocument.using(title="Instructions", filename="child_support_guidelines_worksheet_next_steps.docx", enabled=True, has_addendum=False, default_overflow_message=AL_DEFAULT_OVERFLOW_MESSAGE)
@@ -1861,23 +1859,83 @@ attachments:
       - "parents2_health_care_amount": ${ currency(parents2_health_care_amount) }
       - "parents1_dental_vision_amount": ${ currency(parents1_dental_vision_amount) }
       - "parents2_dental_vision_amount": ${ currency(parents2_dental_vision_amount) }
-      - "parents1_child2_amount": ${ currency(parents1_child2_amount) }
-      - "parents1_child5_amount": ${ currency(parents1_child5_amount) }
       - "parents1_child1_amount": ${ currency(parents1_child1_amount) }
-      - "parents1_child3_amount": ${ currency(parents1_child3_amount) }
-      - "parents1_child4_amount": ${ currency(parents1_child4_amount) }
+      - "parents1_child2_amount": |
+           % if children_number >= 2:
+           ${ currency(parents1_child2_amount) }
+           % else:
+           N/A
+           % endif
+      - "parents1_child3_amount": |
+           % if children_number >= 3:
+           ${ currency(parents1_child3_amount) }
+           % else:
+           N/A
+           % endif
+      - "parents1_child4_amount": |
+           % if children_number >= 4:
+           ${ currency(parents1_child4_amount) }
+           % else:
+           N/A
+           % endif     
+      - "parents1_child5_amount": |
+           % if children_number >= 5:
+           ${ currency(parents1_child5_amount) }
+           % else:
+           N/A
+           % endif          
+      - "parents2_child1_amount": ${ currency(parents2_child1_amount) }
+      - "parents2_child2_amount": |
+           % if children_number >= 2:
+           ${ currency(parents2_child2_amount) }
+           % else:
+           N/A
+           % endif
+      - "parents2_child3_amount": |
+           % if children_number >= 3:
+           ${ currency(parents2_child3_amount) }
+           % else:
+           N/A
+           % endif
+      - "parents2_child4_amount": |
+           % if children_number >= 4:
+           ${ currency(parents2_child4_amount) }
+           % else:
+           N/A
+           % endif
+      - "parents2_child5_amount": |
+           % if children_number >= 5:
+           ${ currency(parents2_child5_amount) }
+           % else:
+           N/A
+           % endif
+      - "child1_total_amount": ${ currency(parents1_child1_amount + parents2_child1_amount) }
+      - "child2_total_amount": |
+           % if children_number >= 2:
+           ${ currency(parents1_child2_amount + parents2_child2_amount) }
+           % else:
+           N/A
+           % endif
+      - "child3_total_amount": |
+           % if children_number >= 3:
+           ${ currency(parents1_child3_amount + parents2_child3_amount) }
+           % else:
+           N/A
+           % endif
+      - "child4_total_amount": |
+           % if children_number >= 4:
+           ${ currency(parents1_child4_amount + parents2_child4_amount) }
+           % else:
+           N/A
+           % endif
+      - "child5_total_amount": |
+           % if children_number >= 5:
+           ${ currency(parents1_child5_amount + parents2_child5_amount) }
+           % else:
+           N/A
+           % endif
       - "parents1_all_children_amount": ${ currency(parents1_child1_amount + parents1_child2_amount + parents1_child3_amount + parents1_child4_amount + parents1_child5_amount) }
       - "parents2_all_children_amount": ${ currency(parents2_child1_amount + parents2_child2_amount + parents2_child3_amount + parents2_child4_amount + parents2_child5_amount) }
-      - "parents2_child1_amount": ${ currency(parents2_child1_amount) }
-      - "parents2_child2_amount": ${ currency(parents2_child2_amount) }
-      - "parents2_child3_amount": ${ currency(parents2_child3_amount) }
-      - "parents2_child4_amount": ${ currency(parents2_child4_amount) }
-      - "parents2_child5_amount": ${ currency(parents2_child5_amount) }
-      - "child2_total_amount": ${ currency(parents1_child2_amount + parents2_child2_amount) }
-      - "child3_total_amount": ${ currency(parents1_child3_amount + parents2_child3_amount) }
-      - "child4_total_amount": ${ currency(parents1_child4_amount + parents2_child4_amount) }
-      - "child5_total_amount": ${ currency(parents1_child5_amount + parents2_child5_amount) }
-      - "child1_total_amount": ${ currency(parents1_child1_amount + parents2_child1_amount) }
       - "parents2_available_income_amount": ${ currency(parents2_available_income_amount) }
       - "parents1_available_income_amount": ${ currency(parents1_available_income_amount) }     
       - "combined_available_income_amount": ${ currency(combined_available_income_amount) }
@@ -1890,30 +1948,55 @@ attachments:
            ${ currency(7692) }
            % endif
       - "one_child_support_amount": ${ currency(one_child_support_amount) }           
-      - "parents2_child_number_adjustments": ${ parents2_child_number_adjustments }        
+      - "parents2_child_number_adjustments": |
+          % if two_thirds_yes == True:
+          N/A
+          % else:
+          ${ parents2_child_number_adjustments }
+          % endif
       - "parents1_child_number_adjustments": ${ parents1_child_number_adjustments }
-      - "parents2_support_amount": ${ currency(one_child_support_amount * parents2_child_number_adjustments) }
+      - "parents2_support_amount": |
+          % if two_thirds_yes == True:
+          N/A
+          % else: 
+          ${ currency(one_child_support_amount * parents2_child_number_adjustments) }
+          % endif
       - "parents1_support_amount": ${ currency(one_child_support_amount * parents1_child_number_adjustments) }
       - "parents1_children_adjustments": ${ round(parents1_children_adjustments * 100) } %
-      - "parents2_children_adjustments": ${ round(parents2_children_adjustments * 100) } %
+      - "parents2_children_adjustments": |
+          % if two_thirds_yes == True:
+          N/A
+          % else:  
+          ${ round(parents2_children_adjustments * 100) } %
+          % endif
       - "parents1_over_18_adjustments_amount": ${ currency(round(parents1_support_amount * parents1_children_adjustments)) }
-      - "parents2_over_18_adjustments_amount": ${ currency(round(parents2_support_amount * parents2_children_adjustments)) }
-      - "parents1_adjusted_support_amount": ${ currency(round(parents1_support_amount - parents1_over_18_adjustments_amount)) }
-      - "parents2_adjusted_support_amount": ${ currency(round(parents2_support_amount - parents2_over_18_adjustments_amount)) }
+      - "parents2_over_18_adjustments_amount": |
+          % if two_thirds_yes == True:
+          N/A
+          % else: 
+          ${ currency(round(parents2_support_amount * parents2_children_adjustments)) }
+          % endif
+      - "parents1_adjusted_support_amount": ${ currency(parents1_adjusted_support_amount) }
+      - "parents2_adjusted_support_amount": |
+          % if two_thirds_yes == True:
+          N/A
+          % else:
+          ${ currency(parents2_adjusted_support_amount) }
+          % endif
       - "parents1_share_support_amount":  ${ currency(round(parents1_share_support_amount)) }
       - "parents2_share_support_amount": |
-           % if parents2_share_support_amount == 1:
-           N/A
-           % else:
-           ${ parents2_share_support_amount = parents2_share_support_amount } %
-           % endif  
-      - "parents1_other_share_support": ${ currency(round(parents1_other_share_support)) }
+          % if two_thirds_yes == True:
+          N/A
+          % else:
+          ${ currency(parents2_share_support_amount) }
+          % endif  
+      - "parents1_other_share_support": ${ currency(parents1_other_share_support) }
       - "parents2_other_share_support": |
-           % if parents2_other_share_support == 1:
-           N/A
-           % else:
-           ${ parents2_other_share_support = parents2_other_share_support } % 
-           % endif    
+          % if two_thirds_yes == True:
+          N/A
+          % else:
+          ${ currency(parents2_other_share_support) }  
+          % endif    
       - "parents1_other_low_income_adjusted": ${ currency(round(parents1_other_low_income_adjusted)) }
       - "parents2_other_low_income_adjusted": ${ currency(round(parents2_other_low_income_adjusted)) }
       - "parents2_benchmark_amount": ${ currency(round(parents2_benchmark_amount)) }
@@ -1940,10 +2023,15 @@ attachments:
       - "payor_recipient": ${ payor_recipient }
       - "payors_adjusted_share_amount": ${ currency(payors_adjusted_share_amount) } 
       - "mass_gov_yes": ${ mass_gov_yes }
-      - "recipients_support_income_percent": ${ round(recipients_support_income_percent * 100) } %
+      - "recipients_support_income_percent": |
+          % if two_thirds_yes == True:
+          ${ round(recipients_support_income_percent * 100) } %
+          % else:
+          N/A
+          % endif
       - "payors_disparity_adjusted_amount": ${ currency(round(payors_disparity_adjusted_amount)) }
       - "payors_SS_credit_amount": ${ currency(payors_SS_credit_amount) }
-      - "payors_obligations_amount": ${ currency(payors_obligations_amount) }        
+      - "payors_obligations_amount": ${ currency(payors_obligations_amount) }     
       - "obligations_hardship_yes": ${ obligations_hardship_yes }
       - "payors_support_income_percent_amount": ${ round(payors_support_income_percent_amount * 100) } %
       - "combined_additional_income_amount": ${ currency(combined_additional_income_amount) }
