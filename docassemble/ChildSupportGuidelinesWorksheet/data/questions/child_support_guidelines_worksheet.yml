@@ -1695,26 +1695,36 @@ code: |
 ---
 #sets payors_disparity_adjusted_amount, 7b
 #math from worksheet
-#If 7a is ≥ 10% or is N/A, enter 6g
-#If 7a is < 10%, enter 6e, 6g, or ((7a + 10%) x Payor 3a), whichever is less,
-#but not less than an amount from the shaded area of the Guidelines Chart
 depends on:
   - recipients_support_income_percent
-  - 6e
   - payors_adjusted_share_amount
-  - payor 3a
+  - parents1_available_income_amount
+  - parents2_available_income_amount
+  - parents1_other_limited_adjusted_amount
+  - parents2_other_limited_adjusted_amount
 code: |
-  if recipients_support_income_percent == 'N/A':
-    payors_disparity_adjusted_amount = payors_adjusted_share_amount  
-  elif recipients_support_income_percent >= .1:
-    payors_disparity_adjusted_amount = payors_adjusted_share_amount  
+  if recipients_support_income_percent == 'N/A' or recipients_support_income_percent >= .1:   
+    payors_disparity_adjusted_amount = payors_adjusted_share_amount   
   elif recipients_support_income_percent < .1:
     if parenting_arrangement == 'two-thirds':
       #parents1 recipient and parents2 payor
-      payors_disparity_adjusted_amount = payors_adjusted_share_amount
+      #6e is parents1_other_limited_adjusted_amount here, info on parent a or b use missing from all material about form. 
+      if ((recipients_support_income_percent + recipients_support_income_percent * .1) * parents2_available_income_amount) < payors_adjusted_share_amount or parents1_other_limited_adjusted_amount:
+        payors_disparity_adjusted_amount = ((recipients_support_income_percent + recipients_support_income_percent * .1) * parents2_available_income_amount)
+      elif payors_adjusted_share_amount < ((recipients_support_income_percent + recipients_support_income_percent * .1) * parents2_available_income_amount) or parents1_other_limited_adjusted_amount:
+        payors_disparity_adjusted_amount = payors_adjusted_share_amount
+      elif parents1_other_limited_adjusted_amount < payors_adjusted_share_amount or ((recipients_support_income_percent + recipients_support_income_percent * .1) * parents2_available_income_amount):
+        payors_disparity_adjusted_amount = parents1_other_limited_adjusted_amount
     else:
-      #parents2 recipient and parents2 payor
-      payors_disparity_adjusted_amount = payors_adjusted_share_amount  
+      #parents2 recipient and parents1 payor
+      #6e is parents2_other_limited_adjusted_amount here, info on parent a or b use missing from all material about form. 
+      if ((recipients_support_income_percent + recipients_support_income_percent * .1) * parents1_available_income_amount) < payors_adjusted_share_amount or parents2_other_limited_adjusted_amount:
+        payors_disparity_adjusted_amount =  ((recipients_support_income_percent + recipients_support_income_percent * .1) * parents1_available_income_amount)
+      if payors_adjusted_share_amount < ((recipients_support_income_percent + recipients_support_income_percent * .1) * parents1_available_income_amount) or parents2_other_limited_adjusted_amount:
+        payors_disparity_adjusted_amount = payors_adjusted_share_amount
+      if parents2_other_limited_adjusted_amount < ((recipients_support_income_percent + recipients_support_income_percent * .1) * parents1_available_income_amount) or payors_adjusted_share_amount:
+        payors_disparity_adjusted_amount = parents2_other_limited_adjusted_amount
+  #needs validation on not dropping below shaded guidlines area ($12)
   set_payors_disparity_adjusted_amount = True
 ---
 #sets payors_SS_credit_amount, 7c
