@@ -337,7 +337,7 @@ fields:
   - "How much in {Food Stamps/SNAP} does ${ parents1_name_full } recieve?": parents1_food_stamps_amount
     datatype: number
     show if: parents1_gross_include_public_assistance
-    help: "Food Stamps"
+    help: "Food Stamps . . ."
     default: 0
 terms:
   TAFDC/Welfare: |
@@ -359,11 +359,11 @@ code: |
 ---
 id: parents1 social security info
 question: |
-  Does ${ parents1_name_full } recieve any dependecy benefits as a part of their Social Security income?
+  Does ${ parents1_name_full } recieve any dependency benefits as a part of their Social Security income?
 fields:
   - "Does ${ parents1_name_full } recieve any Social Security dependency benfits?": parents1_ss_yes
     datatype: yesnoradio
-    note: "Social Security dependency benefits is the amount you recieve becuase of a dependant you have, this is distinct from what you might be recieving for yourself."
+    note: "A Social Security dependency benefit is the amount you recieve because of a dependant you have, this is distinct from what you might be recieving for yourself."
   - "What is ${ parents1_name_full }'s Social Security dependency benefit?": parents1_SS_dependency_amount
     datatype: currency
     min: 0
@@ -430,7 +430,7 @@ question: |
 fields:
   - "Does ${ parents2_name_full } recieve any Social Security dependency benfits?": parents2_ss_yes
     datatype: yesnoradio
-    note: "Social Security Dependency benefits is the amount you recieve becuase of a dependant you have, this is distinct from what you might be recieving for yourself."
+    note: "A Social Security Dependency benefit is the amount you recieve becuase of a dependant you have, this is distinct from what you might be recieving for yourself."
   - "How much is ${ parents2_name_full }'s Social Security dependency benefit?": parents2_SS_dependency_amount   
     datatype: currency
     min: 0
@@ -455,9 +455,9 @@ code: |
 ---
 id: parents1 health and other expenses
 question: |
-  How much does ${ parents1_name_full } pay for health, dental, and vision insurance? And, are any child support payements already being made - informal or court-ordered?
+  How much does ${ parents1_name_full } pay for health, dental, and vision insurance? And, are any child support payments already being made - informal or court-ordered?
 fields:  
-  - "Put the weekly amount that ${ parents1_name_full } actually pays for individual or family health care coverage?": parents1_health_care_amount
+  - "Put the weekly amount that ${ parents1_name_full } actually pays for individual or family health care coverage.": parents1_health_care_amount
     datatype: currency
     min: 0
     help: |
@@ -467,15 +467,15 @@ fields:
     min: 0
     help : |
       In this field, put the cost of dental and vision insurance for the children. Put the weekly amount each parent actually pays for dental and vision insurance. **Unlike health care coverage this number is limited to what is actually paid for the child**.
-  - "Put the weekly amount ${ parents1_name_full } pays in existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case.:": parents1_other_obligations_amount
+  - "Put the weekly amount ${ parents1_name_full } pays in existing court-ordered or voluntary payments for a child, spouse, or former spouse not involved under this order.": parents1_other_obligations_amount
     datatype: currency
     min: 0 
     help: |
-      In this field, put existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case.
+      In this field, put existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved under this order.
 ---
 id: parents2 health and other expenses
 question: |
-  How much does ${ parents2_name_full } pay for health, dental, and vision insurance? And, are any child support payements already being made - informal or court-ordered?
+  How much does ${ parents2_name_full } pay for health, dental, and vision insurance? And, are any child support payments already being made - informal or court-ordered?
 fields:
   - "Put the weekly amount that ${ parents2_name_full } actually pays for individual or family health care coverage.": parents2_health_care_amount
     datatype: currency
@@ -487,19 +487,19 @@ fields:
     min: 0
     help : |
       In this field, put the cost of dental and vision insurance for the children. Put the weekly amount each parent actually pays for dental and vision insurance. **Unlike health care coverage this number is limited to what is actually paid for the child**.
-  - "Put the weekly amount ${ parents2_name_full } pays in existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case.": parents2_other_obligations_amount
+  - "Put the weekly amount ${ parents2_name_full } pays in existing court-ordered or voluntary payments for a child, spouse, or former spouse not involved under this order.": parents2_other_obligations_amount
     datatype: currency
     min: 0
     help: |
-      In this field, put existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved on this case.
+      In this field, put existing court-ordered or voluntary payments each parent makes for a child, spouse, or former spouse not involved under this order.
 ---
 id: parents1 work expenses for each child
 question: |
    Does ${ parents1_name_full } pay for child care costs for work-related reasons?
 fields:
-  - "Does ${ parents1_name_full } pay any child care costs to enable them to go to work or to training for work?": parents1_child_care_yesno
+  - "Does ${ parents1_name_full } pay any child care costs to enable them to go to work or to train for work?": parents1_child_care_yesno
     datatype: yesnoradio
-  - note: "Put the weekly amount ${ parents1_name_full } actually pays for work-related child care or child care so they can get work-related training and education. The limit for each child covered by the order is $355 per week."
+  - note: "Put the weekly amount ${ parents1_name_full } actually pays for work-related child care or child care so they can get work-related training and education. The limit for each child covered by this order is $355 per week."
     show if: parents1_child_care_yesno
   - "What are the work-related child care expenses for Child 1?": parents1_child1_amount
     datatype: currency
@@ -563,9 +563,9 @@ id: parents2 work expenses for each child
 question: |
   How much does ${ parents2_name_full } pay for each child for work-related child care expenses?
 fields:
-  - "Does ${ parents2_name_full } pay any child care costs to enable them to go to work or to training for work?": parents2_child_care_yesno
+  - "Does ${ parents2_name_full } pay any child care costs to enable them to go to work or to train for work?": parents2_child_care_yesno
     datatype: yesnoradio 
-  - note: "Put the weekly amount ${ parents2_name_full } actually pays for work-related child care or child care so they can get work-related training and education. The limit for each child covered by the order is $355 per week."
+  - note: "Put the weekly amount ${ parents2_name_full } actually pays for work-related child care or child care so they can get work-related training and education. The limit for each child covered by this order is $355 per week."
     show if: parents2_child_care_yesno
   - "What are the work-related child care expenses for Child 1": parents2_child1_amount
     datatype: currency
