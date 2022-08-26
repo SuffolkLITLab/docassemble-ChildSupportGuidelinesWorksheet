@@ -367,14 +367,14 @@ fields:
   - "What is ${ parents1_name_full }'s Social Security dependency benefit?": parents1_SS_dependency_amount
     datatype: currency
     min: 0
-    help: |
-      This will be info on what numbers to give.  
+#    help: |
+#      This will be info on what numbers to give.  
     show if: parents1_ss_yes
   - "How much of ${ parents1_name_full }'s Social Security dependency benefit is sent directly to them?": parents1_SS_dependency_recievied_amount   
     datatype: currency
     min: 0
-    help: |
-      This will be info on what numbers to give.  
+#    help: |
+#      This will be info on what numbers to give.  
     show if: parents1_ss_yes
 ---
 #sets SS benfits to 0 if they do not recieve them. 
@@ -411,7 +411,7 @@ fields:
   - "How much in Food Stamps does ${ parents2_name_full } recieve?": parents2_food_stamps_amount
     datatype: number
     show if: parents2_gross_include_public_assistance
-    help: "Food Stamps"
+    help: "Food Stamps . . ."
     default: 0    
 ---
 #parents2 public assistance adjustment to gross weekly income
@@ -434,14 +434,14 @@ fields:
   - "How much is ${ parents2_name_full }'s Social Security dependency benefit?": parents2_SS_dependency_amount   
     datatype: currency
     min: 0
-    help: |
-      This will be info on what numbers to give.      
+#   help: |
+#      This will be info on what numbers to give.      
     show if: parents2_ss_yes
   - "How much of ${ parents2_name_full }'s Social Security dependency benefit is sent directly to them?": parents2_SS_dependency_recievied_amount
     datatype: currency
     min: 0
-    help: |
-      This will be info on what numbers to give. 
+#    help: |
+#      This will be info on what numbers to give. 
     show if: parents2_ss_yes
 ---
 #sets SS benfits to 0 if they do not recieve them. 
