@@ -54,7 +54,7 @@ setup(name='docassemble.ChildSupportGuidelinesWorksheet',
       url='https://courtformsonline.org',
       packages=find_packages(),
       namespace_packages=['docassemble'],
-      install_requires=['docassemble.ALMassachusetts>=0.1.1', 'docassemble.AssemblyLine>=2.14.1', 'docassemble.MassAccess>=0.3.0'],
+      install_requires=['docassemble.ALMassachusetts>=0.1.1', 'docassemble.AssemblyLine>=2.17.0', 'docassemble.MassAccess>=0.3.0'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/ChildSupportGuidelinesWorksheet/', package='docassemble.ChildSupportGuidelinesWorksheet'),
      )
