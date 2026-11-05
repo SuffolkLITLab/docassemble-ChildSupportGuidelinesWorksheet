@@ -168,11 +168,11 @@ subquestion: |
   
   To complete the interview you need to have income and expense information for **both parents**. Use the other parent’s Financial Statement if you have it. If you do not know the other parent’s information, put in what you think it is.  
   
-  This interview is intended to make the [Child Support Worksheet](https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021) a simpler and less time consuming process to complete. It is based on the [Massachusetts Child Support Guidlines for 2025](https://www.mass.gov/resource/2025-child-support-guidelines).
+  This interview is intended to make the [Child Support Worksheet](https://courtforms.jud.state.ma.us/publicforms/PFC0001_2021) a simpler and less time consuming process to complete. It is based on the [Massachusetts Child Support Guidelines for 2025](https://www.mass.gov/resource/2025-child-support-guidelines).
 ---
 id: Preparer information
 question: |
-  Please give the full name of who is filling out this worksheet, and what todays date is.
+  Please give the full name of who is filling out this worksheet, and what today’s date is.
 fields:
   - "Who is filling out this worksheet?": preparer_name_full
     maxlength: 28
@@ -297,7 +297,7 @@ id: Child domicile assigning
 question: |
   How many children live with each parent?
 subquestion: |   
-  Since the parenting arangment is **split**, meaning some children live with each parent, put the number of children living with each parent in the respective fields. 
+  Since the parenting arrangement is **split**, meaning some children live with each parent, put the number of children living with each parent in the respective fields.
 fields:
   - "How many of the children that live with ${ parents1_name_full } are **under 18 years old**?": parents1_under_18_number
     datatype: number    
@@ -325,18 +325,18 @@ fields:
       "Gross Weekly Income" is your income before taxes and deductions are taken out. It does not include public assistance like welfare, TAFDC, SSI, and Food Stamps SNAP. If you get a Social Security dependency benefit for your child, do not include that benefit in this field, you will be asked for it soon.
   - "Does the gross income amount include public assistance like TAFDC/Welfare, SSI, and Food Stamps/SNAP?": parents1_gross_include_public_assistance
     datatype: yesnoradio
-    help: "The number giving you Gross Income from the Finacial Statement includes these numbers."
-  - "How much in {TAFDC/Welfare} does ${ parents1_name_full } recieve?": parents1_tafdc_amount
+    help: "The number giving you Gross Income from the Financial Statement includes these numbers."
+  - "How much in {TAFDC/Welfare} does ${ parents1_name_full } receive?": parents1_tafdc_amount
     datatype: number
     show if: parents1_gross_include_public_assistance
     help: "This is a cash benefits program."
     default: 0
-  - "How much {SSI} does ${ parents1_name_full } recieve?": parents1_ssi_amount
+  - "How much {SSI} does ${ parents1_name_full } receive?": parents1_ssi_amount
     datatype: number
     show if: parents1_gross_include_public_assistance
     help: "Supplemental Security Income (SSI) is a means tested supplemental income program."
     default: 0
-  - "How much in {Food Stamps/SNAP} does ${ parents1_name_full } recieve?": parents1_food_stamps_amount
+  - "How much in {Food Stamps/SNAP} does ${ parents1_name_full } receive?": parents1_food_stamps_amount
     datatype: number
     show if: parents1_gross_include_public_assistance
     help: "Food Stamps . . ."
@@ -345,7 +345,7 @@ terms:
   TAFDC/Welfare: |
     TAFDC and Welfare are the same thing. Transitional Assistance to Families with Dependent Children (TAFDC) is a means tested cash benefits program for families who have dependent children.
   SSI: |
-    Supplamental Security Income (SSI) is a means tested program for disabled children, disabled adults, and individuals aged 65 or older.
+    Supplemental Security Income (SSI) is a means tested program for disabled children, disabled adults, and individuals aged 65 or older.
   Food Stamps/SNAP: |
     Food Stamps is now called SNAP. It is a means tested food voucher program run by the state government. Qualifying people get monthly money for food purchases sent to a EBT card.
 ---
@@ -365,11 +365,11 @@ code: |
 ---
 id: parents1 social security info
 question: |
-  Does ${ parents1_name_full } recieve any dependency benefits as a part of their Social Security income?
+  Does ${ parents1_name_full } receive any dependency benefits as a part of their Social Security income?
 fields:
-  - "Does ${ parents1_name_full } recieve any Social Security dependency benfits?": parents1_ss_yes
+  - "Does ${ parents1_name_full } receive any Social Security dependency benefits?": parents1_ss_yes
     datatype: yesnoradio
-    note: "A Social Security dependency benefit is the amount you recieve because of a dependant you have, this is distinct from what you might be recieving for yourself."
+    note: "A Social Security dependency benefit is the amount you receive because of a dependent you have, this is distinct from what you might be receiving for yourself."
   - "What is ${ parents1_name_full }'s Social Security dependency benefit?": parents1_SS_dependency_amount
     datatype: currency
     min: 0
@@ -383,7 +383,7 @@ fields:
 #      This will be info on what numbers to give.  
     show if: parents1_ss_yes
 ---
-#sets SS benfits to 0 if they do not recieve them. 
+#sets SS benefits to 0 if they do not receive them.
 depends on:
   - parents1_ss_yes
 code: |
@@ -404,17 +404,17 @@ fields:
   - "Does the gross income amount include public assistance like TAFDC/Welfare, SSI, and Food Stamps/SNAP?": parents2_gross_include_public_assistance
     datatype: yesnoradio
     help: "The number giving you Gross Income from the Financial Statement includes these numbers."
-  - "How much in TAFDC/Welfare does ${ parents2_name_full } recieve?": parents2_tafdc_amount
+  - "How much in TAFDC/Welfare does ${ parents2_name_full } receive?": parents2_tafdc_amount
     datatype: number
     show if: parents2_gross_include_public_assistance
     help: "This is a cash benefits program"
     default: 0
-  - "How much SSI does ${ parents2_name_full } recieve?": parents2_ssi_amount
+  - "How much SSI does ${ parents2_name_full } receive?": parents2_ssi_amount
     datatype: number
     show if: parents2_gross_include_public_assistance
     help: "Supplemental Security Income (SSI) is a means tested supplemental income program."
     default: 0
-  - "How much in Food Stamps does ${ parents2_name_full } recieve?": parents2_food_stamps_amount
+  - "How much in Food Stamps does ${ parents2_name_full } receive?": parents2_food_stamps_amount
     datatype: number
     show if: parents2_gross_include_public_assistance
     help: "Food Stamps . . ."
@@ -436,11 +436,11 @@ code: |
 ---
 id: parents2 social security
 question: |
-  Does ${ parents2_name_full } recieve any dependecy benefits as a part of their Social Security income?
+  Does ${ parents2_name_full } receive any dependency benefits as a part of their Social Security income?
 fields:
-  - "Does ${ parents2_name_full } recieve any Social Security dependency benfits?": parents2_ss_yes
+  - "Does ${ parents2_name_full } receive any Social Security dependency benefits?": parents2_ss_yes
     datatype: yesnoradio
-    note: "A Social Security Dependency benefit is the amount you recieve becuase of a dependant you have, this is distinct from what you might be recieving for yourself."
+    note: "A Social Security Dependency benefit is the amount you receive because of a dependent you have, this is distinct from what you might be receiving for yourself."
   - "How much is ${ parents2_name_full }'s Social Security dependency benefit?": parents2_SS_dependency_amount   
     datatype: currency
     min: 0
@@ -454,7 +454,7 @@ fields:
 #      This will be info on what numbers to give. 
     show if: parents2_ss_yes
 ---
-#sets SS benfits to 0 if they do not recieve them. 
+#sets SS benefits to 0 if they do not receive them.
 depends on:
   - parents2_ss_yes
 code: |
@@ -1335,7 +1335,7 @@ code: |
   set_parents1_share_support_percent = True
 ---
 #sets parents2_share_support_amount, 5a, Parent B
-#rules from MLRI Guidlines have parents2_share_support_amount blank if two-thirds true.
+#rules from MLRI Guidelines have parents2_share_support_amount blank if two-thirds true.
 depends on: 
  - parents2_income_share_percent
  - parents2_adjusted_support_amount
@@ -1353,7 +1353,7 @@ code: |
   set_parents1_other_share_support = True
 ---
 #setting parents2_other_share_support, 5b, Parent B
-#rules from MLRI Guidlines have parents2_share_support_amount blank if two-thirds true.
+#rules from MLRI Guidelines have parents2_share_support_amount blank if two-thirds true.
 depends on:
  - parents2_share_support_amount
  - parents2_adjusted_support_amount
@@ -1362,7 +1362,7 @@ code: |
   set_parents2_other_share_support = True
 ---
 #setting parents1_other_low_income_adjusted, 5c, Parent A
-#Logic and math are coming from shaded area of table A, not Child Support Guidlines Chart.
+#Logic and math are coming from shaded area of table A, not Child Support Guidelines Chart.
 depends on:
   - parenting_arrangement
   - parents2_available_income_amount
@@ -1396,7 +1396,7 @@ code: |
   calculate_parents1_other_low_income_adjusted = True
 ---
 #sets parents2_other_low_income_adjusted, 5c, Parent B
-#Logic and math are coming from shaded area of table A, not Child Support Guidlines Chart.
+#Logic and math are coming from shaded area of table A, not Child Support Guidelines Chart.
 depends on: 
   - parenting_arrangement
   - parents2_other_share_support
@@ -1567,7 +1567,7 @@ code: |
   set_parents2_other_adjusted_support_share = True 
 ---
 #sets parents1_income_support_percent, 6d, Parent A
-#math from MLRI Guidlines
+#math from MLRI Guidelines
 #two_thirds_yes == True wants to have N/A display
 depends on:
   - parents1_available_income_amount
@@ -1580,7 +1580,7 @@ code: |
   set_parents1_income_support_percent = True
 ---
 #sets parents2_income_support_percent, 6d, Parent B
-#math from MLRI Guidlines
+#math from MLRI Guidelines
 #two_thirds_yes == True wants to have N/A display - used in attachment block
 depends on:
   - parents2_available_income
