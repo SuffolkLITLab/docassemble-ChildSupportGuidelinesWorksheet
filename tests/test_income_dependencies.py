@@ -2,10 +2,42 @@
 import unittest
 import yaml
 from docassemble.base import parse
+from docassemble.base.plugin_manager import pm
+from docassemble.base.thread_context import empty_globals, global_context
+import pluggy
 from test_income_adjustment import BLOCKS, calculation
+
+hookimpl = pluggy.HookimplMarker("docassemble")
+
+
+class TestConfiguration:
+    """Supply server configuration while running the engine without a web server."""
+
+    @hookimpl
+    def get_configuration(self):
+        return {}
+
+    @hookimpl
+    def get_main_page_parts(self):
+        return {}
+
+    @hookimpl
+    def get_default_language(self):
+        return "en"
+
+    @hookimpl
+    def get_default_timezone(self):
+        return "UTC"
+
 
 
 class IncomeDependencyTests(unittest.TestCase):
+    def setUp(self):
+        self.configuration = TestConfiguration()
+        pm.register(self.configuration)
+        self.addCleanup(pm.unregister, self.configuration)
+        self.enterContext(global_context(empty_globals()))
+
     def test_edits_invalidate_and_recalculate_for_both_parents(self):
         for parent in ("parents1", "parents2"):
             with self.subTest(parent=parent):
