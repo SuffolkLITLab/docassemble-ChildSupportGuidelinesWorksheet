@@ -350,7 +350,7 @@ terms:
     Food Stamps is now called SNAP. It is a means tested food voucher program run by the state government. Qualifying people get monthly money for food purchases sent to a EBT card.
 ---
 #parents1 public assistance adjustment to gross weekly income
-depends:
+depends on:
   - parents1_gross_include_public_assistance
 code: |
   if parents1_gross_include_public_assistance == True:
@@ -417,7 +417,7 @@ fields:
     default: 0    
 ---
 #parents2 public assistance adjustment to gross weekly income
-depends:
+depends on:
   - parents2_gross_include_public_assistance
 code: |
   if parents2_gross_include_public_assistance == True:
