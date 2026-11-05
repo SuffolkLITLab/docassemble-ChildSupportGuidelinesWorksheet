@@ -349,14 +349,18 @@ terms:
   Food Stamps/SNAP: |
     Food Stamps is now called SNAP. It is a means tested food voucher program run by the state government. Qualifying people get monthly money for food purchases sent to a EBT card.
 ---
-#parents1 public assistance adjustment to gross weekly income
+# Keep the entered income unchanged when recalculating public assistance.
 depends on:
+  - parents1_gross_amount
   - parents1_gross_include_public_assistance
+  - parents1_ssi_amount
+  - parents1_food_stamps_amount
+  - parents1_tafdc_amount
 code: |
-  if parents1_gross_include_public_assistance == True:
-    parents1_gross_amount = parents1_gross_amount - parents1_ssi_amount - parents1_food_stamps_amount - parents1_tafdc_amount
+  if parents1_gross_include_public_assistance:
+    parents1_adjusted_gross_amount = parents1_gross_amount - parents1_ssi_amount - parents1_food_stamps_amount - parents1_tafdc_amount
   else:
-    parents1_gross_amount = parents1_gross_amount
+    parents1_adjusted_gross_amount = parents1_gross_amount
   adjust_parents1_gross_amount = True
 ---
 id: parents1 social security info
@@ -416,14 +420,18 @@ fields:
     help: "Food Stamps . . ."
     default: 0    
 ---
-#parents2 public assistance adjustment to gross weekly income
+# Keep the entered income unchanged when recalculating public assistance.
 depends on:
+  - parents2_gross_amount
   - parents2_gross_include_public_assistance
+  - parents2_ssi_amount
+  - parents2_food_stamps_amount
+  - parents2_tafdc_amount
 code: |
-  if parents2_gross_include_public_assistance == True:
-    parents2_gross_amount = parents2_gross_amount - parents2_ssi_amount - parents2_food_stamps_amount - parents2_tafdc_amount
+  if parents2_gross_include_public_assistance:
+    parents2_adjusted_gross_amount = parents2_gross_amount - parents2_ssi_amount - parents2_food_stamps_amount - parents2_tafdc_amount
   else:
-    parents2_gross_amount = parents2_gross_amount
+    parents2_adjusted_gross_amount = parents2_gross_amount
   adjust_parents2_gross_amount = True
 ---
 id: parents2 social security
@@ -1071,29 +1079,29 @@ progress: 100
 #sets parents1_available_income_amount, 3a, Parent A 
 depends on:
   - parents1_SS_dependency_amount
-  - parents1_gross_amount
+  - parents1_adjusted_gross_amount
   - parents1_other_obligations_amount
   - parents1_health_care_amount
   - parents1_dental_vision_amount
 code: |
-  if parents1_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount <= 0:
+  if parents1_adjusted_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount <= 0:
     parents1_available_income_amount = 0
   else:
-    parents1_available_income_amount = round(parents1_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount)
+    parents1_available_income_amount = round(parents1_adjusted_gross_amount + parents1_SS_dependency_amount - parents1_other_obligations_amount - parents1_health_care_amount - parents1_dental_vision_amount)
   calculate_parents1_available_income_amount = True
 ---
 #sets parents2_available_income_amount, 3a, Parent B
 depends on:
   - parents2_SS_dependency_amount
-  - parents2_gross_amount
+  - parents2_adjusted_gross_amount
   - parents2_other_obligations_amount
   - parents2_health_care_amount
   - parents2_dental_vision_amount
 code: |
-  if parents2_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount <= 0:
+  if parents2_adjusted_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount <= 0:
     parents2_available_income_amount = 0
   else:
-    parents2_available_income_amount = round(parents2_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount)
+    parents2_available_income_amount = round(parents2_adjusted_gross_amount + parents2_SS_dependency_amount - parents2_other_obligations_amount - parents2_health_care_amount - parents2_dental_vision_amount)
   calculate_parents2_available_income_amount = True
 --- 
 #calculates combined_available_income_amount, 3b
@@ -1888,8 +1896,8 @@ attachments:
       - "parents2_over_18_number": ${ "{:,.2f}".format(parents2_over_18_number) }
       - "parents1_total_children_number": ${ parents1_over_18_number + parents1_under_18_number }
       - "parents2_total_children_number": ${ parents2_over_18_number + parents2_under_18_number }
-      - "parents1_gross_amount": ${ currency(parents1_gross_amount) }
-      - "parents2_gross_amount": ${ currency(parents2_gross_amount) }
+      - "parents1_gross_amount": ${ currency(parents1_adjusted_gross_amount) }
+      - "parents2_gross_amount": ${ currency(parents2_adjusted_gross_amount) }
       - "parents1_SS_dependency_amount": ${ currency(parents1_SS_dependency_amount) }
       - "parents2_SS_dependency_amount": ${ currency(parents2_SS_dependency_amount) }
       - "parents2_SS_dependency_recievied_amount": ${ currency(parents2_SS_dependency_recievied_amount) }
